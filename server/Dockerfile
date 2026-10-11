@@ -2,9 +2,9 @@ FROM python:3.12.15-slim-bookworm
 WORKDIR /app
 COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt && useradd --uid 10001 --create-home oddcurrent
-COPY server server
-COPY profiles profiles
-COPY web web
+COPY --chown=10001:10001 server server
+COPY --chown=10001:10001 profiles profiles
+COPY --chown=10001:10001 web web
 RUN mkdir /data && chown oddcurrent:oddcurrent /data
 USER 10001:10001
 EXPOSE 8787
