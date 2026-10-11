@@ -4,8 +4,9 @@
 starting with David: a 450 mm illuminated sculpture made as two gifts.
 
 **Development milestone, not a shipping release.** The software is implemented and
-testable locally. Hardware wiring approval, real phone onboarding, signed firmware,
-production identity/ingress and physical verification remain explicit gates. Read
+tested locally and in CI, with a running owner-hosted application. Hardware wiring
+approval, real phone onboarding, signed firmware and physical verification remain
+explicit gates. Read
 [`docs/validation.md`](docs/validation.md) for actual test evidence.
 
 David V1 now uses **two LED outputs**, per the owner's revised requirement:

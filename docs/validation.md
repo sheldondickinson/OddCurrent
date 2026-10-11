@@ -1,40 +1,51 @@
 # Validation record — 12 October 2026
 
-This is a development milestone, **not a shipping or deployment certificate**.
-All synthetic values and coordinates are fixtures/simulation, not David readings.
+This is a development milestone, **not a shipping certificate**. All synthetic
+values and coordinates are fixtures/simulation, not David readings. Private
+operating facts and endpoints remain in the owner’s canonical registry.
 
 | Check | Actual result / limitation |
 |---|---|
-| Backend/profile/factory/backup tests | 35 pytest tests passed locally on Python3.12; no physical device |
+| Backend/profile/factory/backup tests | 36 pytest tests passed locally on Python 3.12 and in CI; no physical device |
 | Firmware policy | Host C++ tests passed for debounce, gestures, setup holds, update lockout, status priority, expiry and replay |
-| Public source | Tracked-file scan passed; no private endpoint/path/key patterns, ignored factory/runtime files excluded |
+| Public source | Tracked-file scan passed; private runtime/factory files excluded; owner endpoints and paths absent |
 | Backend dependency audit | No known vulnerabilities returned by dated requirements audit |
-| Desktop/mobile UI | Browser-rendered, simulator login and Sunset command acknowledgement checked; 390px viewport has390px document width |
-| Calibration editor | Starts with0 measured coordinates; exports input for completeness/duplicate/status validation |
-| SQLite recovery | Online backup restored owner, device and sequence in independent temporary database with integrity check |
-| GitHub software CI | Passed initial33-test milestone, C++ policy, JS syntax and public-source checks; final revision CI must be read back |
-| ESP32 compile | Under validation; unsigned development artifact only after successful CI/build |
-| Docker service | Portable container prepared; local daemon unavailable, no running production container claimed |
-| Real OIDC sign-in | Requires dedicated issuer/client/callback and allowed/denied account browser acceptance |
-| Hardware | None attached/flashed. Seller board photos and owner-reported5V WS2811 are specification evidence only |
-| Onboarding/QR/NFC | Tools and AP-only portal implemented; real phones, tags and secure Wi-Fi association untested |
+| Desktop/mobile UI | Browser-rendered simulator login and Sunset acknowledgement; 390 px viewport has 390 px document width |
+| Calibration editor | Starts with zero measured coordinates; completeness/duplicate/status-exclusion validation implemented |
+| GitHub CI | Software, firmware and restrictive-checkout container jobs all passed for `632da2bc372109dc3972806e65ad54b0405ca6da`, [run 38183807645](https://github.com/sheldondickinson/OddCurrent/actions/runs/38183807645) |
+| ESP32 compile | Pinned WLED 16.0.1 S3 N16R8 target compiled; downloaded binary hashes matched CI; unsigned development artifacts only |
+| Hosted application | Restrictive read-only production container running; HTTPS health and anonymous API denial verified; dedicated workload read accepted and unrelated record read denied |
+| OIDC | Real owner browser code/PKCE callback completed; operator fleet displays both unclaimed, offline lamps. Recipient and unrelated-account browser acceptance remains pending |
+| Public device transport | Temporary synthetic fixture exercised certificate-verified Cloudflare WSS upgrade, invalid credential rejection, telemetry, session-bound command/ACK, replay rejection and offline rejection. Fixture removed |
+| SQLite recovery | Nightly online backup enabled; actual production backup restored separately with integrity, two unclaimed identities and sequences checked. Off-host disaster restore not exercised |
+| Factory material | Two unique private identities, setup QR SVGs, claim inserts and HTTPS NFC destinations generated; credentials/claims stored hash-only on server; owner-encrypted archive round-trip checked |
+| Hardware | None attached/flashed. Seller photos and owner-reported 5 V WS2811 are specification evidence only |
+| Onboarding/QR/NFC | AP-only portal and tools implemented; destination HTTP routes exist. Real phones, tags, captive portal and Wi-Fi association untested |
 | OTA/tamper resistance | Cloud updates disabled; signing, rollback, secure boot and flash encryption not accepted |
+
+The hosted runtime uses the previously verified backend commit `ddf777b`; subsequent
+changes through `632da2b` affect firmware/factory tooling, not the deployed backend.
+The two real registrations have never connected. No synthetic test values were
+written to their device records.
 
 ## Release blockers
 
 1. Exact carrier revision/power schematic or continuity and USB backfeed proof.
-2. Pixel timing (400/800kHz), colour order, current, harness/fuse/PSU design and soak.
-3. Two simultaneous outputs + INMP441 + WSS + native UI; failure/reconnect/heap and
+2. Pixel timing (400/800 kHz), colour order, current, harness/fuse/PSU design and soak.
+3. Two simultaneous outputs + INMP441 + WSS + native UI; reconnect/heap and
    local-control latency. Six-output alternative requires a separate bench test.
-4. Both real maps and anatomical masks, firmware hot/cold boots, switch gestures,
+4. Both real maps and anatomical masks, hot/cold boots, switch gestures,
    AP recovery, false holds and update interruption.
-5. Dedicated production app identity/secret scope, confirmed HTTPS origin and
-   server ingress, actual account/permission and device end-to-end acceptance.
-6. Per-device identity provisioning/rotation, shipping NFC destinations and readback,
-   real iPhone/Android onboarding at two homes, strong native OTA protection.
-7. Signed firmware/recovery plan; review WLED's upstream npm build-tool advisories,
-   the S3 watchdog default and remaining future features (schedules/favourite editing).
+5. Recipient-only account/permission acceptance, device credential rotation and
+   off-host app recovery. Gift owners may be assigned later; no invitations sent.
+6. Physical identity import, shipping NFC write/readback, iPhone/Android onboarding
+   at two homes, internet-outage behaviour and strong native OTA protection.
+7. Signed firmware/recovery plan; review upstream npm build-tool advisories,
+   the S3 watchdog default and remaining features (schedules/favourite editing).
 
 No source test can close a physical gate. `scripts/profiles.py --wiring` deliberately
 rejects the present profile. Final PSU selection must use measured load; the
-conditional60mA example remains11.82A/59.1W for197 pixels, not a measured requirement.
+conditional 60 mA example remains 11.82 A / 59.1 W for 197 pixels, not a measured
+requirement. Cloudflare Tunnel runs on the server; the ESP32 only opens outbound
+certificate-verified WSS. Native WLED UI and audio stay local by design, with actual
+internet-outage acceptance still pending bench tests.

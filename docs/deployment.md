@@ -1,6 +1,8 @@
 # Deploy and recover
 
-Deployment is prepared, **not activated**. Use a dedicated app OIDC client with
+This portable runbook was exercised on the owner’s deployment on 12 October 2026.
+Actual endpoints, workload roles and server paths remain in the private operating
+registry. Use a dedicated app OIDC client with
 exact HTTPS callback `<origin>/auth/callback`, issuer and signing-key discovery.
 Enable code + PKCE S256 and give gift accounts access to this application only.
 Validate allowed/denied accounts and claim replay in the real browser before

@@ -58,8 +58,9 @@ measure internal channels, base, LED carrier dimensions and microphone opening.
 ## Seller evidence, 2026-10-12
 
 Owner supplied product images for a dual USB-C CH343P carrier with WROOM-1
-N16R8 marking, an 1117-family regulator and RGB LED labelled GPIO48. Header
-labels show all proposed pins. The graphic incorrectly implies every exposed
+N16R8 marking and an 1117-family regulator. The supplied pin diagram labels the
+onboard RGB LED GPIO47; similar carriers often use GPIO48. Reserve both until
+continuity identifies the actual connection. Header labels show all proposed pins. The graphic incorrectly implies every exposed
 memory GPIO can be freely used; reserve GPIO35–37 for octal PSRAM. No carrier
 schematic or exact revision was supplied, so continuity, regulator capacity and
 USB/external-5V backfeed remain open. GPIO6–9 are free in the two-output build.

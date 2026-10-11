@@ -16,7 +16,8 @@
       "sd_gpio": 12,
       "lr_select": "GND"
     },
-    "onboard_rgb_gpio": 48
+    "onboard_rgb_gpio": null,
+    "onboard_rgb_evidence": "Supplied pin diagram labels GPIO47; GPIO48 is common on similar carriers. Exact carrier continuity required; reserve both."
   },
   "pixels": {
     "type": "WS2811_RGB",
