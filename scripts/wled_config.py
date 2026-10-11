@@ -14,6 +14,7 @@ profile=validate_profile(json.loads(a.profile.read_text()),wiring=True)
 calibration=json.loads(a.calibration.read_text())
 ledmap,regions=export_map(calibration,profile)
 if profile['profile_id']!='david-v1' or len(profile['outputs'])!=2:raise SystemExit('This WLED adapter currently accepts David two-output builds only')
+if profile['outputs'][0]['key']!='status':raise SystemExit('Protected status must be physical bus0')
 types={'WS2812_RGB':22,'SK6812_RGBW':30}
 if profile['pixels']['type']=='WS2811_RGB':
     hz=profile['pixels'].get('protocol_hz')

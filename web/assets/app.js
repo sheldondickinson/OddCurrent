@@ -25,6 +25,7 @@ function render() {
   $('connection').className='chip'+(online?' online':'');
   $('serial').textContent=lamp?.id || 'Your illuminated companion';
   $('access').hidden=!!session && !!lamp;
+  $('logout').hidden=!session;
   $('advanced').hidden=session?.role!=='owner' || !lamp;
   $('power').disabled=$('brightness').disabled=$('music').disabled=!canControl;
   $('power').setAttribute('aria-pressed',String(!!r.on));
@@ -95,6 +96,7 @@ $('zoneApply').onclick=()=>{
   send({zone:$('zone').value,scene:lamp.reported.scene || 'gallery'});
 };
 $('fleetButton').onclick=()=>{$('fleet').hidden=!$('fleet').hidden;if(!$('fleet').hidden)$('fleet').scrollIntoView({behavior:'smooth'});};
+$('logout').onclick=async()=>{try{await api('/api/logout',{method:'POST'});location.href='/';}catch(error){notice(error.message);}};
 $('claimButton').onclick=()=>{$('claimSerial').value=location.pathname.split('/')[2]||'';$('claimDialog').showModal();};
 $('closeClaim').onclick=()=>$('claimDialog').close();
 $('claimForm').onsubmit=async event=>{
