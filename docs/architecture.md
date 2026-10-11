@@ -27,6 +27,14 @@ Use upstream WLED **16.0.1**, revision
 QIO flash / OPI PSRAM, preserving the native UI, mDNS and audio-reactive usermod.
 N16R8 alone does not establish the board carrier or USB wiring.
 
+Build inspection found that WLED's default Tasmota Arduino 2.0.18 framework omits
+the `WiFiClientSecure` library. OddCurrent selects WLED's documented alternative,
+**espressif32 6.13.0 / Arduino 2.0.17 / IDF 4.4.7**, so the adapter can validate
+public CA certificates. This is a build-level change, not a TLS bypass. Its extra
+flash use and concurrent peripheral behaviour remain hardware acceptance gates.
+Cloud connection work runs in a separate FreeRTOS task; WLED mutations and button
+handling remain in the main loop with bounded message queues.
+
 The owner revised David V1 to **two outputs** on 2026-10-12: status plus one
 serial decorative chain (195 pixels provisional). This fits two of the four S3
 RMT TX channels and leaves I2S0 for microphone input. The six-output capability

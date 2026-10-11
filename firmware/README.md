@@ -6,6 +6,10 @@ QIO 16 MB flash and OPI 8 MB PSRAM. It targets the CH343P UART USB connector
 (`ARDUINO_USB_CDC_ON_BOOT=0`); native USB is not assumed to be the serial channel.
 Confirm actual carrier and USB connector behaviour before uploading.
 
+The upstream default Tasmota framework omits `WiFiClientSecure`. This target uses
+the upstream-documented Espressif32 6.13.0 framework option (Arduino 2.0.17 /
+IDF 4.4.7), with explicit certificate-verifying WebSockets dependencies.
+
 The extension keeps WLED's native web UI, mDNS and audio-reactive usermod. It adds
 certificate-verified outbound WebSockets, expiring session-bound commands,
 four-button gestures and physical status protection after WLED's XY mapping.
