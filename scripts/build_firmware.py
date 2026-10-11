@@ -36,6 +36,11 @@ def main():
   #else
   handleSerial();
   #endif''')
+    replace_once(source/'wled00/wled_server.cpp', '  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {', '''  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    #ifdef ODDCURRENT_BRIDGE
+    extern bool oddcurrentSetupRoot(AsyncWebServerRequest*);
+    if(oddcurrentSetupRoot(request)) return;
+    #endif''')
     if a.prepare_only: return
     subprocess.run(['pio', 'run', '-d', str(source), '-e', lock['environment']], check=True)
     dest = ROOT / 'firmware/build'; dest.mkdir(exist_ok=True)

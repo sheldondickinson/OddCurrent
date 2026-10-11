@@ -3,6 +3,7 @@
 #include <WiFiClientSecure.h>
 #include <WebSocketsClient.h>
 #include "policy.h"
+#include "setup_page.h"
 
 using oddcurrent::Action;
 using oddcurrent::Status;
@@ -18,6 +19,9 @@ class OddCurrent : public Usermod {
   uint32_t backoff = 1000, warningUntil = 0, successUntil = 0;
   uint32_t stateChanged = 0, lastStateSave = 0;
   bool stateDirty = false;
+  String setupToken, pendingSSID, pendingPassword;
+  bool joinPending=false;
+  uint32_t joinStarted=0;
   uint8_t pins[4] = {13,14,15,16}, statusCount = 0, statusBrightness = 5;
   uint8_t scene = 0, sensitivity = 50, favourite = 0;
   bool updating = false, cloud = false, music = false, ready = false, attempted = false, dirty = true;
@@ -171,6 +175,16 @@ class OddCurrent : public Usermod {
   }
 
 public:
+  bool setupAllowed(AsyncWebServerRequest* request) {
+    return apActive && serial.length() && request->client()->localIP()==WiFi.softAPIP();
+  }
+  bool setupRoot(AsyncWebServerRequest* request) {
+    if(!setupAllowed(request))return false;
+    String html=FPSTR(ODDCURRENT_SETUP_PAGE);html.replace("%CSRF%",setupToken);
+    AsyncWebServerResponse* response=request->beginResponse(200,"text/html",html);
+    response->addHeader("Cache-Control","no-store");response->addHeader("Referrer-Policy","no-referrer");
+    request->send(response);return true;
+  }
   void setup() override {
     factory.begin("oddcurrent",false);
     serial=factory.getString("serial",""); credential=factory.getString("credential","");
@@ -189,6 +203,34 @@ public:
       snprintf(apPass,sizeof(apPass),"%08lx%08lx",(unsigned long)esp_random(),(unsigned long)esp_random());
     }
     socket.onEvent([this](WStype_t t,uint8_t* p,size_t n){event(t,p,n);});
+    setupToken=String((unsigned long)esp_random(),HEX)+String((unsigned long)esp_random(),HEX)+String((unsigned long)esp_random(),HEX)+String((unsigned long)esp_random(),HEX);
+    server.on("/setup/networks",HTTP_GET,[this](AsyncWebServerRequest* request){
+      if(!setupAllowed(request)){request->send(403,"text/plain","Join the lamp setup network first");return;}
+      int count=WiFi.scanComplete();
+      if(count==WIFI_SCAN_FAILED){WiFi.scanNetworks(true);request->send(202,"application/json","[]");return;}
+      if(count==WIFI_SCAN_RUNNING){request->send(202,"application/json","[]");return;}
+      JsonDocument doc;JsonArray names=doc.to<JsonArray>();
+      for(int i=0;i<count && i<40;++i)names.add(WiFi.SSID(i));
+      String json;serializeJson(doc,json);request->send(200,"application/json",json);WiFi.scanDelete();
+    });
+    server.on("/setup/join",HTTP_POST,[this](AsyncWebServerRequest* request){
+      if(!setupAllowed(request) || updating || !request->hasParam("csrf",true) || request->getParam("csrf",true)->value()!=setupToken){request->send(403,"text/plain","Setup request could not be verified");return;}
+      if(!request->hasParam("ssid",true) || !request->hasParam("password",true)){request->send(400,"text/plain","Enter your network name and password");return;}
+      String ssid=request->getParam("ssid",true)->value(),pass=request->getParam("password",true)->value();
+      if(!ssid.length() || ssid.length()>32 || pass.length()>64){request->send(400,"text/plain","Network name or password is too long");return;}
+      pendingSSID=ssid;pendingPassword=pass;joinPending=true;
+      request->redirect("/setup/status");
+    });
+    server.on("/setup/status",HTTP_GET,[this](AsyncWebServerRequest* request){
+      if(!setupAllowed(request)){request->send(403,"text/plain","Use the local device page after connecting");return;}
+      bool connected=WLED_CONNECTED;
+      bool failed=joinStarted && uint32_t(millis()-joinStarted)>30000 && !connected;
+      String text="<!doctype html><html lang=en><meta name=viewport content='width=device-width,initial-scale=1'><title>David setup</title>";
+      if(!connected && !failed)text+="<meta http-equiv=refresh content=3>";
+      text+="<h1>";text+=connected?"David is connected.":failed?"Could not join home Wi-Fi.":"Connecting David…";text+="</h1><p>";
+      text+=connected?"Rejoin your home Wi-Fi. Use the NFC tag for cloud control or your unique lamp .local name for local control.":failed?"Check the network name and password. Keep 2.4 GHz Wi-Fi enabled. Open setup to try again.":"Keep this page open. Your local controls will continue to work.";
+      text+="</p><a href='/'>Back to setup</a></html>";request->send(200,"text/html",text);
+    });
     state.begin("oc-state",false);
     if(state.isKey("scene")) {
       applyScene(state.getUChar("scene",0));
@@ -243,6 +285,13 @@ public:
 
   void loop() override {
     uint32_t now=millis();
+    if(joinPending && !updating) {
+      joinPending=false;joinStarted=now;
+      multiWiFi.clear();multiWiFi.emplace_back(pendingSSID.c_str(),pendingPassword.c_str());selectedWiFi=0;
+      pendingSSID="";pendingPassword="";serializeConfigSec();
+      WiFi.disconnect(false,false);WLED::instance().initConnection();
+    }
+    if(joinStarted && WLED_CONNECTED){successUntil=now+1800;joinStarted=0;}
     for(int b=0;b<4;++b) button(b,keys[b].tick(digitalRead(pins[b])==LOW,now,b==3,updating));
     if(!updating && ready && WLED_CONNECTED && serial.length() && credential.length() && ca.length()) {
       if(!attempted && int32_t(now-nextConnect)>=0) {
@@ -343,4 +392,5 @@ constexpr const char* OddCurrent::scenes[6];
 static OddCurrent oddcurrent_mod;
 void oddcurrentBeforeBusShow() { oddcurrent_mod.beforeBusShow(); }
 bool oddcurrentFactorySerial() { return oddcurrent_mod.factorySerial(); }
+bool oddcurrentSetupRoot(AsyncWebServerRequest* request) { return oddcurrent_mod.setupRoot(request); }
 REGISTER_USERMOD(oddcurrent_mod);
