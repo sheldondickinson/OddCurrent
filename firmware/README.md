@@ -14,13 +14,16 @@ home Wi-Fi and survives the recessed 15-second Wi-Fi-clear gesture. Serial
 provisioning accepts only a virgin identity while the service button is held.
 Electrical activation is **off by default**. The public build is not tamper-proof.
 
-Two bounded hooks are checked by the build script:
+Three bounded hooks are checked by the build script:
 
 1. After pixel mapping, immediately before `BusManager::show()`, render physical
    status bus0 with its own bounded brightness. This preserves status when the
    body is off and prevents realtime/native/audio effects from painting over it.
 2. Before native serial processing, permit physical-button-gated factory import.
    After factory identity exists the native serial handler remains available.
+3. On the password-protected AP interface, the root serves a minimal OddCurrent
+   setup form with network scanning, a per-boot CSRF token and connection status.
+   Home-LAN clients retain the native WLED UI.
 
 Test native UI behaviour and all realtime modes on the actual image; source
 placement is not hardware evidence. WLED's default onboard output is not a final
@@ -72,8 +75,9 @@ pending a tested segment/audio adapter. The generic platform retains a six-outpu
 profile; only the selected two-output image is built by this target.
 
 Automatic signed cloud OTA, resumable credential rotation, persistent favourite
-editing and durable OddCurrent scene restoration across power cuts remain release
-work. WLED preset/autosave can preserve native state after its flash-wear settings
-and restore behaviour are bench-tested. Native OTA needs a unique strong private
+editing remain release work. OddCurrent saves settled scene/light state in
+wear-levelled NVS after ten seconds, at most once per minute. Abrupt power loss
+before that interval restores the previous saved state. Hot/cold restore behaviour
+and flash-wear expectations still require bench acceptance. Native OTA needs a unique strong private
 password. Secure boot/flash encryption and the watchdog-disabled upstream S3
 default require separate review. Do not ship this development image unchanged.

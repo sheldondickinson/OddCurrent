@@ -10,6 +10,9 @@ using oddcurrent::Status;
 
 class OddCurrent : public Usermod {
   WebSocketsClient socket;
+  struct Frame { char text[2049]; };
+  QueueHandle_t incoming=nullptr, outgoing=nullptr;
+  TaskHandle_t networkWorker=nullptr;
   Preferences factory;
   Preferences state;
   oddcurrent::Button keys[4];
@@ -24,7 +27,8 @@ class OddCurrent : public Usermod {
   uint32_t joinStarted=0;
   uint8_t pins[4] = {13,14,15,16}, statusCount = 0, statusBrightness = 5;
   uint8_t scene = 0, sensitivity = 50, favourite = 0;
-  bool updating = false, cloud = false, music = false, ready = false, attempted = false, dirty = true;
+  volatile bool updating = false, cloud = false, ready = false;
+  bool music = false, attempted = false, dirty = true;
   bool zonesReady = false, xyReady = false;
   struct Region { String name; std::vector<uint16_t> pixels; uint8_t scene=0, brightness=100; bool active=false, on=true; };
   std::vector<Region> regions;
@@ -104,27 +108,61 @@ class OddCurrent : public Usermod {
     lastSeq=seq; colorUpdated(CALL_MODE_DIRECT_CHANGE); dirty=true; return true;
   }
 
+  void queueSend(const String& text) {
+    if(!outgoing || text.length()>2048)return;
+    Frame frame;strlcpy(frame.text,text.c_str(),sizeof(frame.text));
+    xQueueSend(outgoing,&frame,0);
+  }
+
+  // Socket callbacks run only on the network task. WLED mutations stay in loop().
   void event(WStype_t type, uint8_t* payload, size_t length) {
     if(type==WStype_DISCONNECTED) {
-      cloud=false; session=""; attempted=false;
+      cloud=false; attempted=false;
       nextConnect=millis()+backoff+(esp_random()%1000);
-      backoff=std::min(uint32_t(60000),backoff*2); return;
+      backoff=std::min(uint32_t(60000),backoff*2);
+      return;
     }
     if(type!=WStype_TEXT || length>2048) return;
+    Frame frame;memcpy(frame.text,payload,length);frame.text[length]=0;
+    if(incoming)xQueueSend(incoming,&frame,0);
+  }
+
+  void processMessage(const char* text) {
     JsonDocument doc;
-    if(deserializeJson(doc,payload,length)) return;
+    if(deserializeJson(doc,text)) return;
     String kind=doc["type"].as<String>();
     if(kind=="hello" && doc["protocol"]==1) {
       session=doc["session"].as<String>();
       if(session.length()!=32)return;
       // Broker time is accepted only inside certificate-verified TLS.
       timeval tv={doc["time"].as<long>(),0}; settimeofday(&tv,nullptr);
-      lastSeq=0; cloud=true; backoff=1000; dirty=true; successUntil=millis()+1800;
+      lastSeq=0; cloud=true; dirty=true; successUntil=millis()+1800;
     } else if(kind=="command" && cloud) {
       bool ok=command(doc.as<JsonObject>());
       JsonDocument ack; ack["type"]="ack"; ack["id"]=doc["id"]; ack["seq"]=doc["seq"];
       ack["status"]=ok?"applied":"rejected";
-      String text; serializeJson(ack,text); socket.sendTXT(text);
+      String reply; serializeJson(ack,reply); queueSend(reply);
+    }
+  }
+
+  static void networkEntry(void* owner) { static_cast<OddCurrent*>(owner)->networkLoop(); }
+  void networkLoop() {
+    Frame frame;
+    for(;;) {
+      uint32_t now=millis();
+      if(!updating && ready && WLED_CONNECTED && serial.length() && credential.length() && ca.length() && time(nullptr)>=1700000000) {
+        if(!attempted && int32_t(now-nextConnect)>=0) {
+          xQueueReset(incoming);xQueueReset(outgoing);
+          String path="/ws/devices/"+serial,header="Authorization: Bearer "+credential;
+          socket.setExtraHeaders(header.c_str());
+          socket.beginSslWithCA(broker.c_str(),443,path.c_str(),ca.c_str());
+          socket.setReconnectInterval(0);socket.enableHeartbeat(15000,5000,2);
+          attempted=true;++reconnects;
+        }
+        if(attempted)socket.loop();
+        while(cloud && xQueueReceive(outgoing,&frame,0)==pdTRUE)socket.sendTXT(frame.text);
+      } else if(attempted) { socket.disconnect();cloud=false;attempted=false; }
+      vTaskDelay(pdMS_TO_TICKS(10));
     }
   }
 
@@ -138,7 +176,7 @@ class OddCurrent : public Usermod {
     d["boot_reason"]=String(int(esp_reset_reason())); d["reconnects"]=reconnects;
     d["uptime_s"]=millis()/1000;
     d["zones_ready"]=zonesReady; d["xy_ready"]=xyReady;
-    String text; serializeJson(d,text); socket.sendTXT(text); lastTelemetry=millis(); dirty=false;
+    String text; serializeJson(d,text); queueSend(text); lastTelemetry=millis(); dirty=false;
   }
 
   void button(uint8_t b, Action a) {
@@ -203,6 +241,8 @@ public:
       snprintf(apPass,sizeof(apPass),"%08lx%08lx",(unsigned long)esp_random(),(unsigned long)esp_random());
     }
     socket.onEvent([this](WStype_t t,uint8_t* p,size_t n){event(t,p,n);});
+    incoming=xQueueCreate(4,sizeof(Frame));outgoing=xQueueCreate(4,sizeof(Frame));
+    if(incoming && outgoing)xTaskCreatePinnedToCore(networkEntry,"oc-network",12288,this,1,&networkWorker,0);
     setupToken=String((unsigned long)esp_random(),HEX)+String((unsigned long)esp_random(),HEX)+String((unsigned long)esp_random(),HEX)+String((unsigned long)esp_random(),HEX);
     server.on("/setup/networks",HTTP_GET,[this](AsyncWebServerRequest* request){
       if(!setupAllowed(request)){request->send(403,"text/plain","Join the lamp setup network first");return;}
@@ -285,6 +325,8 @@ public:
 
   void loop() override {
     uint32_t now=millis();
+    Frame frame;
+    if(incoming)while(xQueueReceive(incoming,&frame,0)==pdTRUE)processMessage(frame.text);
     if(joinPending && !updating) {
       joinPending=false;joinStarted=now;
       multiWiFi.clear();multiWiFi.emplace_back(pendingSSID.c_str(),pendingPassword.c_str());selectedWiFi=0;
@@ -293,20 +335,7 @@ public:
     }
     if(joinStarted && WLED_CONNECTED){successUntil=now+1800;joinStarted=0;}
     for(int b=0;b<4;++b) button(b,keys[b].tick(digitalRead(pins[b])==LOW,now,b==3,updating));
-    if(!updating && ready && WLED_CONNECTED && serial.length() && credential.length() && ca.length()) {
-      if(!attempted && int32_t(now-nextConnect)>=0) {
-        // NEVER setInsecure. Public-root CA + hostname validation and SNTP are required.
-        if(time(nullptr)<1700000000) return;
-        String path="/ws/devices/"+serial;
-        String header="Authorization: Bearer "+credential;
-        socket.setExtraHeaders(header.c_str());
-        socket.beginSslWithCA(broker.c_str(),443,path.c_str(),ca.c_str());
-        socket.setReconnectInterval(60000); socket.enableHeartbeat(15000,5000,2);
-        attempted=true; ++reconnects;
-      }
-      socket.loop();
-      if(cloud && (dirty || uint32_t(now-lastTelemetry)>15000))telemetry();
-    } else if(attempted) { socket.disconnect(); cloud=false; attempted=false; }
+    if(!updating && cloud && (dirty || uint32_t(now-lastTelemetry)>15000))telemetry();
     if(ready && statusCount && uint32_t(now-lastFrame)>80 && !strip.isUpdating() && !updating) {
       strip.trigger(); lastFrame=now;
     }
@@ -320,7 +349,7 @@ public:
   }
 
   bool handleButton(uint8_t b) override { return b<4; } // prevent duplicate native gestures
-  void onUpdateBegin(bool init) override { updating=init; if(init)socket.disconnect(); }
+  void onUpdateBegin(bool init) override { updating=init; }
   void onStateChange(uint8_t) override { dirty=true;stateDirty=true;stateChanged=millis(); }
   void addToJsonInfo(JsonObject& obj) override {
     obj["oddcurrent"]["serial"]=serial;
