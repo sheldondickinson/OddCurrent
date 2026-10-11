@@ -26,7 +26,7 @@ function render() {
   $('serial').textContent=lamp?.id || 'Your illuminated companion';
   $('access').hidden=!!session && !!lamp;
   $('logout').hidden=!session;
-  $('advanced').hidden=session?.role!=='owner' || !lamp;
+  $('advanced').hidden=!['owner','admin'].includes(session?.role) || !lamp;
   $('power').disabled=$('brightness').disabled=$('music').disabled=!canControl;
   $('power').setAttribute('aria-pressed',String(!!r.on));
   $('power').setAttribute('aria-label',r.on?'Turn David off':'Turn David on');

@@ -14,6 +14,7 @@ class Config:
     oidc_client_id: str = ''
     oidc_client_secret: str = ''
     session_key: str = field(default_factory=lambda: secrets.token_urlsafe(48))
+    admin_subjects: list[str] = field(default_factory=list)
 
     def validate(self):
         url = urlparse(self.public_origin)

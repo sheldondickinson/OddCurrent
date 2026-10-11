@@ -73,8 +73,9 @@ def create_app(config: Config):
         if not row:
             raise HTTPException(404, 'Device not found')
         is_owner = who['role'] == 'owner' and row['owner'] == who['subject']
+        is_admin = who['role'] == 'admin' and who['subject'] in config.admin_subjects
         is_guest = who['role'] == 'guest' and who['device'] == device
-        if not is_owner and (owner or not is_guest):
+        if not is_owner and not is_admin and (owner or not is_guest):
             raise HTTPException(403, 'This lamp has not been shared with you')
         return row
 
@@ -147,7 +148,7 @@ def create_app(config: Config):
         request.session.clear()
         old = request.cookies.get('oc_session', '')
         store.execute('DELETE FROM sessions WHERE hash=?', (digest(old),))
-        token, _ = store.session(subject=identity)
+        token, _ = store.session(subject=identity,role='admin' if identity in config.admin_subjects else 'owner')
         return cookie(RedirectResponse('/', status_code=303), token)
 
     @app.get('/api/session')
@@ -166,8 +167,11 @@ def create_app(config: Config):
     @app.get('/api/devices')
     def devices(request: Request):
         who = session(request)
-        rows = store.all('SELECT * FROM devices WHERE owner=?' if who['role'] == 'owner' else 'SELECT * FROM devices WHERE id=?',
-                         (who['subject'] if who['role'] == 'owner' else who['device'],))
+        if who['role']=='admin' and who['subject'] in config.admin_subjects:
+            rows=store.all('SELECT * FROM devices ORDER BY id')
+        else:
+            rows = store.all('SELECT * FROM devices WHERE owner=?' if who['role'] == 'owner' else 'SELECT * FROM devices WHERE id=?',
+                             (who['subject'] if who['role'] == 'owner' else who['device'],))
         return [device_view(x, who['role']) for x in rows]
 
     @app.get('/api/devices/{device}')
@@ -179,7 +183,7 @@ def create_app(config: Config):
     def claim(device: str, data: Claim, request: Request):
         who = session(request); csrf(request, who)
         limit(('claim', who['hash']), 5)
-        if who['role'] != 'owner' or not store.claim(device, data.code, who['subject']):
+        if who['role'] not in ('owner','admin') or not store.claim(device, data.code, who['subject']):
             raise HTTPException(403, 'Claim code invalid or already used')
         store.event(device, 'claimed')
         return {'claimed': True}

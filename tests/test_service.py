@@ -146,3 +146,15 @@ def test_invalid_host_and_oversize_body(setup):
     app,db,client,owner,csrf,*_=setup
     assert client.get('/api/session',headers={'Host':'evil.invalid'}).status_code==400
     assert client.post('/api/devices/david-001/commands',content='x'*4097,headers=headers(csrf)).status_code==413
+
+def test_only_explicit_operator_subject_gets_fleet_authority(setup):
+    app,db,client,*_=setup
+    app.state.config.admin_subjects=['issuer|operator']
+    token,csrf=db.session(subject='issuer|operator',role='admin')
+    client.cookies.set('oc_session',token)
+    assert len(client.get('/api/devices').json())==2
+    assert client.get('/api/devices/david-002').status_code==200
+    token,_=db.session(subject='issuer|impostor',role='admin')
+    client.cookies.set('oc_session',token)
+    assert client.get('/api/devices/david-001').status_code==403
+    assert client.get('/api/devices').json()==[]
