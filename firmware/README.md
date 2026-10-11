@@ -22,7 +22,10 @@ four-button gestures and physical status protection after WLED's XY mapping.
 No credentials are embedded in the image. Factory NVS identity is separate from
 home Wi-Fi and survives the recessed 15-second Wi-Fi-clear gesture. Serial
 provisioning accepts only a virgin identity while the service button is held.
-Electrical activation is **off by default**. The public build is not tamper-proof.
+Electrical activation is **off by default**. After private identity and Wi-Fi
+provisioning, the cloud transport can report diagnostics while hardware is disabled;
+lighting commands still fail the hardware-ready guard. The public build is not
+tamper-proof.
 
 Four bounded hooks are checked by the build script:
 

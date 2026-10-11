@@ -157,7 +157,7 @@ class OddCurrent : public Usermod {
         nextConnect=now+backoff+(esp_random()%1000);
         backoff=std::min(uint32_t(60000),backoff*2);
       }
-      if(!updating && ready && WLED_CONNECTED && serial.length() && credential.length() && ca.length() && time(nullptr)>=1700000000) {
+      if(!updating && WLED_CONNECTED && serial.length() && credential.length() && ca.length() && time(nullptr)>=1700000000) {
         if(!attempted && int32_t(now-nextConnect)>=0) {
           xQueueReset(incoming);xQueueReset(outgoing);
           String path="/ws/devices/"+serial,header="Authorization: Bearer "+credential;
