@@ -73,3 +73,20 @@ Owner reports **WS2811 seed pixels, 5 V**, 2026-10-12. This establishes the
 intended supply class, not measured current, channel order or bit timing. Confirm
 800 kHz versus 400 kHz against the actual product/datasheet, test R/G/B individually,
 and measure full-white current on a spare sample before final PSU/fuse sizing.
+
+## Bare-board evidence, 2026-10-12
+
+One owner-confirmed USB-only sample reports ESP32-S3 rev0.2, 16 MB flash and
+8 MB embedded PSRAM. Its full pre-install flash was privately preserved and
+device-digest verified before a clean development install. Bootloader at0x0,
+partition table at0x8000 and application at0x10000 were readback verified. Four
+native serial JSON responses reported WLED16.0.1, zero LEDs and hardware-ready0,
+8,287,687 bytes free PSRAM and at least223,060 bytes free heap. Uptime increased
+46→56s. This does not validate the carrier power circuit, any output pin signal,
+INMP441, switches, Wi-Fi/WSS, power cycles or thermal operation. Factory identity
+is not imported. Both gift registrations remain offline/never connected.
+
+The artifact’s actual partition table uses two3 MiB app slots (app0 at0x10000,
+app1 at0x310000), filesystem at0x610000 and coredump at0xff0000. Read the actual
+artifact table before flashing; do not assume an older upstream CSV matches.
+The install used normal Espressif esptool checks without force or eFuse writes.

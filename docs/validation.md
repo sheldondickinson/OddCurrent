@@ -12,21 +12,30 @@ operating facts and endpoints remain in the owner’s canonical registry.
 | Backend dependency audit | No known vulnerabilities returned by dated requirements audit |
 | Desktop/mobile UI | Browser-rendered simulator login and Sunset acknowledgement; 390 px viewport has 390 px document width |
 | Calibration editor | Starts with zero measured coordinates; completeness/duplicate/status-exclusion validation implemented |
-| GitHub CI | Software, firmware and restrictive-checkout container jobs all passed for `632da2bc372109dc3972806e65ad54b0405ca6da`, [run 38183807645](https://github.com/sheldondickinson/OddCurrent/actions/runs/38183807645) |
+| GitHub CI | Software, firmware and restrictive-checkout container jobs all passed for `828f650ac1b20089392ec4237166831161cffe8f`, [run 38185006643](https://github.com/sheldondickinson/OddCurrent/actions/runs/38185006643) |
 | ESP32 compile | Pinned WLED 16.0.1 S3 N16R8 target compiled; downloaded binary hashes matched CI; unsigned development artifacts only |
 | Hosted application | Restrictive read-only production container running; HTTPS health and anonymous API denial verified; dedicated workload read accepted and unrelated record read denied |
 | OIDC | Real owner browser code/PKCE callback completed; operator fleet displays both unclaimed, offline lamps. Recipient and unrelated-account browser acceptance remains pending |
 | Public device transport | Temporary synthetic fixture exercised certificate-verified Cloudflare WSS upgrade, invalid credential rejection, telemetry, session-bound command/ACK, replay rejection and offline rejection. Fixture removed |
 | SQLite recovery | Nightly online backup enabled; actual production backup restored separately with integrity, two unclaimed identities and sequences checked. Off-host disaster restore not exercised |
 | Factory material | Two unique private identities, setup QR SVGs, claim inserts and HTTPS NFC destinations generated; credentials/claims stored hash-only on server; owner-encrypted archive round-trip checked |
-| Hardware | None attached/flashed. Seller photos and owner-reported 5 V WS2811 are specification evidence only |
+| USB-only board | One owner-connected bare board identified as S3 rev0.2, 16 MB flash/8 MB PSRAM; full pre-install flash backed up and digest-verified, encrypted round-trip checked; bootloader/partition/app readback verified after development install |
+| Bare-board boot | Four native WLED 16.0.1 serial JSON responses, uptime46→56s, free PSRAM8,287,687 bytes, minimum free heap223,060 bytes; zero LEDs, hardware activation disabled, no factory identity/cloud connection |
+| Hardware/peripherals | No pixels, microphone, buttons or external power attached. Exact carrier/power circuit and all peripheral/electrical/thermal acceptance remain pending |
 | Onboarding/QR/NFC | AP-only portal and tools implemented; destination HTTP routes exist. Real phones, tags, captive portal and Wi-Fi association untested |
 | OTA/tamper resistance | Cloud updates disabled; signing, rollback, secure boot and flash encryption not accepted |
 
 The hosted runtime uses the previously verified backend commit `ddf777b`; subsequent
-changes through `632da2b` affect firmware/factory tooling, not the deployed backend.
-The two real registrations have never connected. No synthetic test values were
+changes through `828f650` affect firmware/factory tooling, not the deployed backend.
+The USB board is unassigned and its factory namespace is virgin; the two real
+registrations have never connected. No synthetic test values were
 written to their device records.
+
+The USB result is a short observation, not power-cycle, network, peripheral or
+soak acceptance. The pre-install flash remains private. No eFuses were burned and
+no secure-boot/encryption bypass was used. NVS/filesystem were cleared only after
+the full recovery image matched the device digest; gift identities have not been
+imported. Physical-button-gated serial provisioning is still required.
 
 ## Release blockers
 

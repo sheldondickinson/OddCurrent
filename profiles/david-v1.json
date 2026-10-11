@@ -17,7 +17,8 @@
       "lr_select": "GND"
     },
     "onboard_rgb_gpio": null,
-    "onboard_rgb_evidence": "Supplied pin diagram labels GPIO47; GPIO48 is common on similar carriers. Exact carrier continuity required; reserve both."
+    "onboard_rgb_evidence": "Supplied pin diagram labels GPIO47; GPIO48 is common on similar carriers. Exact carrier continuity required; reserve both.",
+    "sample_memory_evidence": "One USB-only sample on 2026-10-12: ROM S3 rev0.2, 16MB flash, 8MB PSRAM; native boot/free PSRAM observed. Carrier circuit and peripheral gates remain false."
   },
   "pixels": {
     "type": "WS2811_RGB",
