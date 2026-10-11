@@ -29,6 +29,8 @@ class OddCurrent : public Usermod {
   uint8_t scene = 0, sensitivity = 50, favourite = 0;
   volatile bool updating = false, cloud = false, ready = false;
   bool music = false, attempted = false, dirty = true;
+  bool disconnectPending=false;
+  uint32_t connectStarted=0;
   bool zonesReady = false, xyReady = false;
   struct Region { String name; std::vector<uint16_t> pixels; uint8_t scene=0, brightness=100; bool active=false, on=true; };
   std::vector<Region> regions;
@@ -50,7 +52,7 @@ class OddCurrent : public Usermod {
     for (unsigned i=0; i<strip.getSegmentsNum(); ++i) {
       auto &seg=strip.getSegment(i);
       if (!seg.isActive()) continue;
-      seg.setMode(scene==3 ? FX_MODE_RAINBOW : scene==4 ? FX_MODE_BREATH : scene==5 ? FX_MODE_FREQWAVE : FX_MODE_STATIC);
+      seg.setMode(scene==3 ? (seg.is2D()?FX_MODE_2DPLASMAROTOZOOM:FX_MODE_RAINBOW) : scene==4 ? FX_MODE_BREATH : scene==5 ? (seg.is2D()?FX_MODE_FREQMATRIX:FX_MODE_FREQWAVE) : FX_MODE_STATIC);
       seg.colors[0] = scene==1 ? RGBW32(255,85,35,0) : scene==2 ? RGBW32(20,100,255,0) : RGBW32(255,215,170,0);
       seg.speed=100; seg.intensity=128;
     }
@@ -119,9 +121,7 @@ class OddCurrent : public Usermod {
   void event(WStype_t type, uint8_t* payload, size_t length) {
     if(type==WStype_CONNECTED){backoff=1000;return;}
     if(type==WStype_DISCONNECTED) {
-      cloud=false; attempted=false;
-      nextConnect=millis()+backoff+(esp_random()%1000);
-      backoff=std::min(uint32_t(60000),backoff*2);
+      cloud=false;disconnectPending=true;
       return;
     }
     if(type!=WStype_TEXT || length>2048) return;
@@ -152,16 +152,22 @@ class OddCurrent : public Usermod {
     Frame frame;
     for(;;) {
       uint32_t now=millis();
+      if(disconnectPending) {
+        socket.disconnect();attempted=false;disconnectPending=false;
+        nextConnect=now+backoff+(esp_random()%1000);
+        backoff=std::min(uint32_t(60000),backoff*2);
+      }
       if(!updating && ready && WLED_CONNECTED && serial.length() && credential.length() && ca.length() && time(nullptr)>=1700000000) {
         if(!attempted && int32_t(now-nextConnect)>=0) {
           xQueueReset(incoming);xQueueReset(outgoing);
           String path="/ws/devices/"+serial,header="Authorization: Bearer "+credential;
           socket.setExtraHeaders(header.c_str());
           socket.beginSslWithCA(broker.c_str(),443,path.c_str(),ca.c_str());
-          socket.setReconnectInterval(0);socket.enableHeartbeat(15000,5000,2);
-          attempted=true;++reconnects;
+          socket.setReconnectInterval(1000);socket.enableHeartbeat(15000,5000,2);
+          attempted=true;connectStarted=now;++reconnects;
         }
         if(attempted)socket.loop();
+        if(attempted && !socket.isConnected() && uint32_t(millis()-connectStarted)>10000)disconnectPending=true;
         while(cloud && xQueueReceive(outgoing,&frame,0)==pdTRUE)socket.sendTXT(frame.text);
       } else if(attempted) { socket.disconnect();cloud=false;attempted=false; }
       vTaskDelay(pdMS_TO_TICKS(10));
@@ -380,7 +386,7 @@ public:
       }
     }
     Status s=oddcurrent::status(updating,errorFlag!=0,int32_t(warningUntil-millis())>0,apActive,WLED_CONNECTED,cloud,bri>0);
-    if(!updating && int32_t(successUntil-millis())>0)s=Status::provisioned;
+    if(!updating && !errorFlag && int32_t(warningUntil-millis())<=0 && int32_t(successUntil-millis())>0)s=Status::provisioned;
     uint8_t pulse=8+(breath8(uint8_t(millis()/(s==Status::wifi?4:16)))>>2);
     uint32_t color=0;
     if(s==Status::setup)color=((millis()/600)%2)?RGBW32(pulse,0,0,0):RGBW32(0,0,pulse,0);
