@@ -33,10 +33,11 @@ class OddCurrent : public Usermod {
   struct Region { String name; std::vector<uint16_t> pixels; uint8_t scene=0, brightness=100; bool active=false, on=true; };
   std::vector<Region> regions;
   int8_t brightnessDirection = 1;
+  static uint8_t breath8(uint8_t phase) { uint16_t ramp=phase<128?phase*2:(255-phase)*2; return ramp*ramp/255; }
   static constexpr const char* scenes[6] = {"gallery","sunset","blue","spectrum","pulse","music"};
 
   void audio() {
-    JsonDocument doc;
+    DynamicJsonDocument doc(8192);
     JsonObject root = doc.to<JsonObject>();
     root["AudioReactive"]["enabled"] = music;
     root["AudioReactive"]["inputLevel"] = map(sensitivity,1,100,1,255);
@@ -129,7 +130,7 @@ class OddCurrent : public Usermod {
   }
 
   void processMessage(const char* text) {
-    JsonDocument doc;
+    DynamicJsonDocument doc(8192);
     if(deserializeJson(doc,text)) return;
     String kind=doc["type"].as<String>();
     if(kind=="hello" && doc["protocol"]==1) {
@@ -140,7 +141,7 @@ class OddCurrent : public Usermod {
       lastSeq=0; cloud=true; dirty=true; successUntil=millis()+1800;
     } else if(kind=="command" && cloud) {
       bool ok=command(doc.as<JsonObject>());
-      JsonDocument ack; ack["type"]="ack"; ack["id"]=doc["id"]; ack["seq"]=doc["seq"];
+      DynamicJsonDocument ack(512); ack["type"]="ack"; ack["id"]=doc["id"]; ack["seq"]=doc["seq"];
       ack["status"]=ok?"applied":"rejected";
       String reply; serializeJson(ack,reply); queueSend(reply);
     }
@@ -168,7 +169,7 @@ class OddCurrent : public Usermod {
   }
 
   void telemetry() {
-    JsonDocument d;
+    DynamicJsonDocument d(8192);
     d["type"]="telemetry"; d["on"]=bri>0;
     d["brightness"]=constrain(map(bri?bri:briLast,3,255,1,100),1,100);
     d["scene"]=scenes[scene]; d["music"]=music; d["sensitivity"]=sensitivity;
@@ -230,7 +231,7 @@ public:
     ca=factory.getString("ca",""); broker=factory.getString("broker","");
     ready=ready || factory.getBool("ready",false);
     statusCount=std::max(statusCount,factory.getUChar("status",0));
-    for(uint8_t p:pins) if(pinManager.allocatePin(p,false,PinOwner::UM_Unspecified)) pinMode(p,INPUT_PULLUP);
+    for(uint8_t p:pins) if(PinManager::allocatePin(p,false,PinOwner::UM_Unspecified)) pinMode(p,INPUT_PULLUP);
     if(serial.length()) {
       strlcpy(cmDNS,serial.c_str(),sizeof(cmDNS));
       strlcpy(apSSID,factory.getString("apssid").c_str(),sizeof(apSSID));
@@ -250,7 +251,7 @@ public:
       int count=WiFi.scanComplete();
       if(count==WIFI_SCAN_FAILED){WiFi.scanNetworks(true);request->send(202,"application/json","[]");return;}
       if(count==WIFI_SCAN_RUNNING){request->send(202,"application/json","[]");return;}
-      JsonDocument doc;JsonArray names=doc.to<JsonArray>();
+      DynamicJsonDocument doc(8192);JsonArray names=doc.to<JsonArray>();
       for(int i=0;i<count && i<40;++i)names.add(WiFi.SSID(i));
       String json;serializeJson(doc,json);request->send(200,"application/json",json);WiFi.scanDelete();
     });
@@ -303,7 +304,7 @@ public:
   void connected() override {
     configTime(0,0,"pool.ntp.org","time.cloudflare.com");
     if(ready && !regions.size() && WLED_FS.exists("/regions.json")) {
-      File file=WLED_FS.open("/regions.json","r");JsonDocument d;
+      File file=WLED_FS.open("/regions.json","r");DynamicJsonDocument d(8192);
       if(deserializeJson(d,file)){file.close();return;}file.close();
       if(d["schema_version"]!="1.0.0" || int(d["status_count"])!=statusCount)return;
       std::vector<uint16_t> seen;
@@ -370,7 +371,7 @@ public:
     for(auto &r:regions)if(r.active) {
       uint32_t color=r.scene==1?RGBW32(255,85,35,0):r.scene==2?RGBW32(20,100,255,0):RGBW32(255,215,170,0);
       uint8_t scale=uint16_t(r.brightness)*255/100;
-      if(r.scene==4)scale=uint16_t(scale)*(32+sin8(millis()/16)*223/255)/255;
+      if(r.scene==4)scale=uint16_t(scale)*(32+breath8(millis()/16)*223/255)/255;
       for(unsigned i=0;i<r.pixels.size();++i) {
         uint32_t c=color;
         if(r.scene==3)c=strip.getMainSegment().color_wheel(uint8_t(i*255/std::max(size_t(1),r.pixels.size())+millis()/25));
@@ -380,7 +381,7 @@ public:
     }
     Status s=oddcurrent::status(updating,errorFlag!=0,int32_t(warningUntil-millis())>0,apActive,WLED_CONNECTED,cloud,bri>0);
     if(!updating && int32_t(successUntil-millis())>0)s=Status::provisioned;
-    uint8_t pulse=8+(sin8(uint8_t(millis()/(s==Status::wifi?4:16)))>>2);
+    uint8_t pulse=8+(breath8(uint8_t(millis()/(s==Status::wifi?4:16)))>>2);
     uint32_t color=0;
     if(s==Status::setup)color=((millis()/600)%2)?RGBW32(pulse,0,0,0):RGBW32(0,0,pulse,0);
     if(s==Status::wifi || s==Status::standby)color=RGBW32(0,0,pulse,0);
@@ -400,7 +401,7 @@ public:
     while(Serial.available()) {
       char c=Serial.read();
       if(c=='\n') {
-        JsonDocument d; bool ok=!deserializeJson(d,serialBuffer);
+        DynamicJsonDocument d(8192); bool ok=!deserializeJson(d,serialBuffer);
         serialBuffer="";
         String id=d["serial"].as<String>();
         ok=ok && id.length()>=4 && id.length()<=32 && d["ap_password"].as<String>().length()>=12
