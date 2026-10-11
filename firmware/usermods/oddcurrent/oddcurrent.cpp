@@ -116,6 +116,7 @@ class OddCurrent : public Usermod {
 
   // Socket callbacks run only on the network task. WLED mutations stay in loop().
   void event(WStype_t type, uint8_t* payload, size_t length) {
+    if(type==WStype_CONNECTED){backoff=1000;return;}
     if(type==WStype_DISCONNECTED) {
       cloud=false; attempted=false;
       nextConnect=millis()+backoff+(esp_random()%1000);
@@ -254,7 +255,8 @@ public:
       String json;serializeJson(doc,json);request->send(200,"application/json",json);WiFi.scanDelete();
     });
     server.on("/setup/join",HTTP_POST,[this](AsyncWebServerRequest* request){
-      if(!setupAllowed(request) || updating || !request->hasParam("csrf",true) || request->getParam("csrf",true)->value()!=setupToken){request->send(403,"text/plain","Setup request could not be verified");return;}
+      String origin="http://"+WiFi.softAPIP().toString();
+      if(!setupAllowed(request) || updating || !request->hasHeader("Origin") || request->getHeader("Origin")->value()!=origin || !request->hasParam("csrf",true) || request->getParam("csrf",true)->value()!=setupToken){request->send(403,"text/plain","Setup request could not be verified");return;}
       if(!request->hasParam("ssid",true) || !request->hasParam("password",true)){request->send(400,"text/plain","Enter your network name and password");return;}
       String ssid=request->getParam("ssid",true)->value(),pass=request->getParam("password",true)->value();
       if(!ssid.length() || ssid.length()>32 || pass.length()>64){request->send(400,"text/plain","Network name or password is too long");return;}

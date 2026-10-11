@@ -36,3 +36,24 @@ jobs:
         with:
           name: DEVELOPMENT-ONLY-S3-N16R8-unsigned
           path: firmware/build/
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f server/Dockerfile -t oddcurrent-ci .
+      - name: Validate isolated container health and read-only runtime
+        run: |
+          python - <<'PY'
+          import json, pathlib, secrets
+          p=pathlib.Path('/tmp/oddcurrent-ci-runtime.json')
+          p.write_text(json.dumps({'database':'/data/test.sqlite','public_origin':'https://lamp.example.invalid','demo':False,'oidc_issuer':'https://identity.example.invalid/','oidc_client_id':'ci-fixture','session_key':secrets.token_urlsafe(48)}))
+          p.chmod(0o600)
+          PY
+          sudo chown 10001:10001 /tmp/oddcurrent-ci-runtime.json
+          docker run -d --name oddcurrent-ci --read-only --cap-drop=ALL --security-opt=no-new-privileges --tmpfs /tmp --tmpfs /data:uid=10001,gid=10001 -p 127.0.0.1:8787:8787 -v /tmp/oddcurrent-ci-runtime.json:/run/secrets/runtime.json:ro oddcurrent-ci
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8787/healthz; then exit 0; fi
+            sleep 1
+          done
+          docker logs oddcurrent-ci
+          exit 1

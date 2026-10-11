@@ -1,4 +1,4 @@
-FROM python:3.12.12-slim-bookworm
+FROM python:3.12.15-slim-bookworm
 WORKDIR /app
 COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt && useradd --uid 10001 --create-home oddcurrent

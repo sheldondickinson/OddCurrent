@@ -55,7 +55,7 @@ def test_csrf_and_offline_no_queue(setup):
     assert client.post('/api/devices/david-001/commands',json={'on':True},headers=headers(csrf)).status_code==409
     assert db.all('SELECT * FROM commands')==[]
 
-@pytest.mark.parametrize('payload',[{}, {'motor':100}, {'brightness':0}, {'brightness':101}, {'brightness':True}, {'on':1}, {'scene':'arbitrary-effect'}, {'status_brightness':21}, {'zone':'penis-status','music':True}])
+@pytest.mark.parametrize('payload',[{}, {'motor':100}, {'brightness':0}, {'brightness':101}, {'brightness':True}, {'on':1}, {'scene':'arbitrary-effect'}, {'status_brightness':21}, {'zone':'penis-status','music':True}, {'zone':'head','scene':'music'}])
 def test_strict_commands(setup,payload):
     app,db,client,owner,csrf,*_=setup
     assert client.post('/api/devices/david-001/commands',json=payload,headers=headers(csrf)).status_code==422
@@ -141,3 +141,8 @@ def test_sequences_persist_across_restart(setup):
     app,db,*_=setup
     a=db.command('david-001',{'on':True});b=db.command('david-001',{'on':False})
     assert b['seq']==a['seq']+1
+
+def test_invalid_host_and_oversize_body(setup):
+    app,db,client,owner,csrf,*_=setup
+    assert client.get('/api/session',headers={'Host':'evil.invalid'}).status_code==400
+    assert client.post('/api/devices/david-001/commands',content='x'*4097,headers=headers(csrf)).status_code==413

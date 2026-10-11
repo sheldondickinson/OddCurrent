@@ -21,6 +21,8 @@ class Lighting(BaseModel):
             raise ValueError('empty command')
         if self.zone and set(values) - {'zone', 'on', 'brightness', 'scene'}:
             raise ValueError('zone accepts only on, brightness and scene')
+        if self.zone and self.scene == 'music':
+            raise ValueError('music is whole-body until region audio adapter acceptance')
         return self
 
 class Claim(BaseModel):
