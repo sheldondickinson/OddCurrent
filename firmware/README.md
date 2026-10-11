@@ -10,6 +10,12 @@ The upstream default Tasmota framework omits `WiFiClientSecure`. This target use
 the upstream-documented Espressif32 6.13.0 framework option (Arduino 2.0.17 /
 IDF 4.4.7), with explicit certificate-verifying WebSockets dependencies.
 
+Stock WLED's default GPIO16 conflicts with David's recessed setup button. This
+target uses invalid/unconnected default data pin255 until a validated bus config
+is installed, so a virgin image cannot drive the recovery switch. Native output
+configuration remains available through the local UI. No wiring is approved by
+this compile-time allocation.
+
 The extension keeps WLED's native web UI, mDNS and audio-reactive usermod. It adds
 certificate-verified outbound WebSockets, expiring session-bound commands,
 four-button gestures and physical status protection after WLED's XY mapping.

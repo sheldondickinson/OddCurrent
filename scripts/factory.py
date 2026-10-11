@@ -27,7 +27,7 @@ def create(serial, origin, broker_host, ca_pem, out):
     os.chmod(out, 0o700)
     identity = {'schema_version': '1.0.0', 'serial': serial, 'profile': 'david-v1',
                 'mdns': serial, 'public_url': origin.rstrip('/') + '/d/' + serial,
-                'ap_ssid': 'ODDCURRENT-SETUP-' + serial[-8:], 'ap_password': secrets.token_urlsafe(18),
+                'ap_ssid': 'ODDCURRENT-SETUP-' + serial[-15:], 'ap_password': secrets.token_urlsafe(18),
                 'device_credential': secrets.token_urlsafe(32), 'claim_code': secrets.token_urlsafe(24),
                 'broker_host': broker_host, 'broker_port': 443, 'ca_pem': ca_pem}
     private_write(out / 'factory.json', json.dumps(identity, indent=2) + '\n')
