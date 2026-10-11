@@ -1,5 +1,6 @@
 #include "wled.h"
 #include <Preferences.h>
+#include <WiFiClientSecure.h>
 #include <WebSocketsClient.h>
 #include "policy.h"
 

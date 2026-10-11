@@ -13,7 +13,7 @@ flowchart LR
   UI[Mobile web app] -->|HTTPS / session + CSRF| API[OddCurrent API / SQLite]
   IDP[OIDC identity provider] --> API
   ESP[ESP32-S3 / WLED + OddCurrent] -->|outbound authenticated WSS| API
-  ESP --> LED[6 parallel LED outputs]
+  ESP --> LED[2 outputs: status + body]
   MIC[INMP441] -->|I2S receive| ESP
   BTN[4 physical buttons] --> ESP
   LAN[Native WLED UI / discovery] --> ESP
@@ -27,10 +27,13 @@ Use upstream WLED **16.0.1**, revision
 QIO flash / OPI PSRAM, preserving the native UI, mDNS and audio-reactive usermod.
 N16R8 alone does not establish the board carrier or USB wiring.
 
-The ESP32-S3 has only four RMT TX channels. Six outputs must use WLED's parallel
-driver, with the microphone on an independent audio peripheral. Source inspection
+The owner revised David V1 to **two outputs** on 2026-10-12: status plus one
+serial decorative chain (195 pixels provisional). This fits two of the four S3
+RMT TX channels and leaves I2S0 for microphone input. The six-output capability
+remains an alternative hardware profile; WLED's S3 parallel path uses the LCD
+method, which still requires simultaneous bench validation. Source inspection
 and compilation cannot prove concurrent electrical operation: that is a release
-gate. Do not silently remove an output. If this path fails, compare an ESP-IDF
+gate. Do not silently remove an output. If either selected path fails, compare an ESP-IDF
 controller (better resource ownership, larger UI/effect rewrite) or a tested
 clocked-pixel/multi-controller carrier in a new ADR before rewiring.
 
