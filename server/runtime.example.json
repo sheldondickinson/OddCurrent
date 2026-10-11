@@ -1,0 +1,9 @@
+{
+  "database": "/data/oddcurrent.sqlite",
+  "public_origin": "https://lamp.example.invalid",
+  "demo": false,
+  "oidc_issuer": "https://identity.example.invalid/application/o/oddcurrent/",
+  "oidc_client_id": "REPLACE_WITH_DEDICATED_CLIENT_ID",
+  "oidc_client_secret": "REPLACE_IN_PROTECTED_SECRET_SOURCE",
+  "session_key": "REPLACE_WITH_AT_LEAST_32_RANDOM_CHARACTERS"
+}
