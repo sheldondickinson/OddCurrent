@@ -1,0 +1,12 @@
+field,value,unit,evidence
+pixel_count,197,pixels,provisional maximum
+pixel_voltage,,V,REQUIRED chipset datasheet
+full_white_current_per_pixel,,A,REQUIRED datasheet and measured sample
+controller_current,,A,REQUIRED measured
+brightness_current_limit,,A,REQUIRED soak validated
+psu_continuous_rating,,A,REQUIRED thermal derating
+branch_fuse_ratings,,A,REQUIRED wire protection
+longest_branch_round_trip_length,,m,REQUIRED harness measurement
+wire_cross_section,,mm2,REQUIRED current and voltage-drop design
+max_measured_voltage_drop,,V,REQUIRED at furthest pixel
+max_enclosure_temperature,,degC,REQUIRED closed enclosure soak

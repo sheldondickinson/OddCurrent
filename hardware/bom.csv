@@ -1,0 +1,13 @@
+item,per_lamp,two_lamps,spares,status
+ESP32-S3 N16R8 carrier,1,2,1,exact board unconfirmed
+Addressable RGB pixels,196-197,392-394,20,chipset voltage size unconfirmed
+INMP441 breakout,1,2,1,verify genuine part and breakout schematic
+SN74AHCT245 buffer for confirmed 5V pixels,1,2,1,power sequencing design pending
+100nF decoupling capacitor,2,4,4,minimum buffer and mic local decoupling
+Data series resistor,6,12,6,value after signal test
+External momentary button,3,6,2,low voltage active low
+Recessed momentary button,1,2,1,recovery access test
+Isolated low-voltage external PSU,1,2,0,rating not selected
+Fused distribution and keyed harness,1,2,1,ratings and connectors pending
+HTTPS NFC tag,1,2,2,encode only confirmed public destination
+Setup label and private claim insert,1,2,2,generate unique after provisioning

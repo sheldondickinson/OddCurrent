@@ -1,0 +1,14 @@
+.local/
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.sqlite*
+.env
+secrets/
+factory-private/
+firmware/build/
+node_modules/
+playwright-report/
+test-results/
+.DS_Store
