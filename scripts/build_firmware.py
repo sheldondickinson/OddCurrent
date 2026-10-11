@@ -41,6 +41,11 @@ def main():
     extern bool oddcurrentSetupRoot(AsyncWebServerRequest*);
     if(oddcurrentSetupRoot(request)) return;
     #endif''')
+    replace_once(source/'wled00/cfg.cpp', '    for (unsigned i = 0; i < WLED_MAX_BUSSES; i++) {\n      uint8_t defPin[OUTPUT_MAX_PINS];', '''    for (unsigned i = 0; i < WLED_MAX_BUSSES; i++) {
+      #ifdef ODDCURRENT_BRIDGE
+      break; // virgin OddCurrent images never auto-select or drive an unknown data pin
+      #endif
+      uint8_t defPin[OUTPUT_MAX_PINS];''')
     if a.prepare_only: return
     subprocess.run(['pio', 'run', '-d', str(source), '-e', lock['environment']], check=True)
     dest = ROOT / 'firmware/build'; dest.mkdir(exist_ok=True)

@@ -11,7 +11,7 @@ the upstream-documented Espressif32 6.13.0 framework option (Arduino 2.0.17 /
 IDF 4.4.7), with explicit certificate-verifying WebSockets dependencies.
 
 Stock WLED's default GPIO16 conflicts with David's recessed setup button. This
-target uses invalid/unconnected default data pin255 until a validated bus config
+target disables WLED's automatic default-bus creation until a validated bus config
 is installed, so a virgin image cannot drive the recovery switch. Native output
 configuration remains available through the local UI. No wiring is approved by
 this compile-time allocation.
@@ -24,7 +24,7 @@ home Wi-Fi and survives the recessed 15-second Wi-Fi-clear gesture. Serial
 provisioning accepts only a virgin identity while the service button is held.
 Electrical activation is **off by default**. The public build is not tamper-proof.
 
-Three bounded hooks are checked by the build script:
+Four bounded hooks are checked by the build script:
 
 1. After pixel mapping, immediately before `BusManager::show()`, render physical
    status bus0 with its own bounded brightness. This preserves status when the
@@ -34,6 +34,9 @@ Three bounded hooks are checked by the build script:
 3. On the password-protected AP interface, the root serves a minimal OddCurrent
    setup form with network scanning, a per-boot CSRF token and connection status.
    Home-LAN clients retain the native WLED UI.
+4. Virgin-image default output creation is disabled. WLED would otherwise try
+   another free pin when its configured default is invalid, so an invalid pin
+   marker alone is insufficient. Explicit validated bus configurations still load.
 
 Test native UI behaviour and all realtime modes on the actual image; source
 placement is not hardware evidence. WLED's default onboard output is not a final
