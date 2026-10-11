@@ -315,14 +315,14 @@ public:
         for(JsonVariant v:pair.value().as<JsonArray>()) {
           if(!v.is<unsigned>())return;
           unsigned index=v.as<unsigned>();
-          if(index<statusCount || index>=strip.getLengthTotal() || std::find(seen.begin(),seen.end(),index)!=seen.end())return;
+          if(index<statusCount || index>=BusManager::getTotalLength(true) || std::find(seen.begin(),seen.end(),index)!=seen.end())return;
           seen.push_back(index);r.pixels.push_back(index);
         }
         regions.push_back(r);
       }
-      zonesReady=seen.size()==strip.getLengthTotal()-statusCount;
+      zonesReady=seen.size()==BusManager::getTotalLength(true)-statusCount;
       if(!zonesReady)regions.clear();
-      xyReady=zonesReady && WLED_FS.exists("/ledmap.json");
+      xyReady=zonesReady && strip.isMatrix && WLED_FS.exists("/ledmap.json");
     }
   }
 
