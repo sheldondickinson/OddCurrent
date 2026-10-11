@@ -9,11 +9,14 @@ using oddcurrent::Status;
 class OddCurrent : public Usermod {
   WebSocketsClient socket;
   Preferences factory;
+  Preferences state;
   oddcurrent::Button keys[4];
   String serial, credential, ca, broker, session, serialBuffer;
   uint64_t lastSeq = 0;
   uint32_t lastTelemetry = 0, lastFrame = 0, nextConnect = 0, reconnects = 0;
   uint32_t backoff = 1000, warningUntil = 0, successUntil = 0;
+  uint32_t stateChanged = 0, lastStateSave = 0;
+  bool stateDirty = false;
   uint8_t pins[4] = {13,14,15,16}, statusCount = 0, statusBrightness = 5;
   uint8_t scene = 0, sensitivity = 50, favourite = 0;
   bool updating = false, cloud = false, music = false, ready = false, attempted = false, dirty = true;
@@ -185,6 +188,16 @@ public:
       snprintf(apPass,sizeof(apPass),"%08lx%08lx",(unsigned long)esp_random(),(unsigned long)esp_random());
     }
     socket.onEvent([this](WStype_t t,uint8_t* p,size_t n){event(t,p,n);});
+    state.begin("oc-state",false);
+    if(state.isKey("scene")) {
+      applyScene(state.getUChar("scene",0));
+      briLast=state.getUChar("brightness",128);
+      bri=state.getBool("on",false)?briLast:0;
+      sensitivity=state.getUChar("sensitivity",50);
+      statusBrightness=state.getUChar("status_bri",5);
+      music=state.getBool("music",false);audio();
+      colorUpdated(CALL_MODE_INIT);
+    }
   }
 
   // Trusted-LAN configuration gate. Tooling creates this only after profile validation.
@@ -247,11 +260,18 @@ public:
     if(ready && statusCount && uint32_t(now-lastFrame)>80 && !strip.isUpdating() && !updating) {
       strip.trigger(); lastFrame=now;
     }
+    // Save only settled changes, no more than once a minute; NVS is wear-levelled.
+    if(!updating && stateDirty && uint32_t(now-stateChanged)>10000 && uint32_t(now-lastStateSave)>60000) {
+      state.putUChar("scene",scene);state.putUChar("brightness",bri?bri:briLast);
+      state.putBool("on",bri>0);state.putBool("music",music);
+      state.putUChar("sensitivity",sensitivity);state.putUChar("status_bri",statusBrightness);
+      stateDirty=false;lastStateSave=now;
+    }
   }
 
   bool handleButton(uint8_t b) override { return b<4; } // prevent duplicate native gestures
   void onUpdateBegin(bool init) override { updating=init; if(init)socket.disconnect(); }
-  void onStateChange(uint8_t) override { dirty=true; }
+  void onStateChange(uint8_t) override { dirty=true;stateDirty=true;stateChanged=millis(); }
   void addToJsonInfo(JsonObject& obj) override {
     obj["oddcurrent"]["serial"]=serial;
     obj["oddcurrent"]["hardware_ready"]=ready;

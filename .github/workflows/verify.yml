@@ -1,0 +1,38 @@
+name: Verify development milestones
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  software:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-node@v4
+        with: {node-version: '24'}
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest -q
+      - run: g++ -std=c++17 tests/policy_test.cpp -o /tmp/policy-test && /tmp/policy-test
+      - run: node --check web/assets/app.js
+      - run: python scripts/profiles.py profiles/david-v1.json
+      - run: python scripts/check_public.py
+  firmware:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/setup-node@v4
+        with: {node-version: '24'}
+      - run: pip install -r requirements-firmware.txt
+      - run: python scripts/build_firmware.py
+      - run: sha256sum firmware/build/*.bin > firmware/build/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DEVELOPMENT-ONLY-S3-N16R8-unsigned
+          path: firmware/build/
