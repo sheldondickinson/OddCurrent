@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/oddcurrent/calibration-1.0.0",
+  "type": "object",
+  "required": ["schema_version", "width", "height", "output_counts", "pixels"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "width": {"type": "integer", "minimum": 1, "maximum": 128},
+    "height": {"type": "integer", "minimum": 1, "maximum": 128},
+    "output_counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 1}},
+    "pixels": {"type": "array", "items": {
+      "type": "object", "required": ["output", "index", "zone", "x", "y"], "additionalProperties": false,
+      "properties": {"output": {"type": "string"}, "index": {"type": "integer", "minimum": 0}, "zone": {"type": "string"}, "x": {"type": "integer", "minimum": 0}, "y": {"type": "integer", "minimum": 0}}
+    }}
+  }
+}

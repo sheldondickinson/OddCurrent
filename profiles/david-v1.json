@@ -7,7 +7,7 @@
     "mcu": "ESP32-S3",
     "flash_mb": 16,
     "psram_mb": 8,
-    "board_carrier": "TO_BE_VERIFIED",
+    "board_carrier": "Seller images: dual USB-C, CH343P, 44-pin WROOM-1 N16R8 clone; exact revision/schematic pending",
     "microphone": {
       "model": "INMP441",
       "interface": "I2S",
@@ -15,16 +15,20 @@
       "ws_gpio": 11,
       "sd_gpio": 12,
       "lr_select": "GND"
-    }
+    },
+    "onboard_rgb_gpio": 48
   },
   "pixels": {
-    "type": "UNKNOWN_ADDRESSABLE_RGB",
-    "voltage_v": null,
+    "type": "WS2811_RGB",
+    "voltage_v": 5,
     "estimated_total_min": 196,
     "estimated_total_max": 197,
     "projection": "XY_FRONT_2D",
     "map_file": null,
-    "mapping_status": "UNMEASURED"
+    "mapping_status": "UNMEASURED",
+    "specification_evidence": "Owner reported WS2811 seeds, 5 V on 2026-10-12; timing, colour order and current not measured",
+    "colour_order": null,
+    "protocol_hz": null
   },
   "outputs": [
     {
@@ -38,46 +42,18 @@
       "priority": "system-overrides-effects"
     },
     {
-      "key": "left-arm",
+      "key": "body",
       "gpio": 5,
-      "estimate": 20,
+      "estimate": 195,
       "zones": [
         "left-arm",
-        "left-hand"
-      ]
-    },
-    {
-      "key": "right-arm",
-      "gpio": 6,
-      "estimate": 20,
-      "zones": [
+        "left-hand",
         "right-arm",
-        "right-hand"
-      ]
-    },
-    {
-      "key": "left-leg",
-      "gpio": 7,
-      "estimate": 28,
-      "zones": [
+        "right-hand",
         "left-leg",
-        "left-foot"
-      ]
-    },
-    {
-      "key": "right-leg",
-      "gpio": 8,
-      "estimate": 27,
-      "zones": [
+        "left-foot",
         "right-leg",
-        "right-foot"
-      ]
-    },
-    {
-      "key": "core",
-      "gpio": 9,
-      "estimate": 100,
-      "zones": [
+        "right-foot",
         "torso",
         "pelvis",
         "head",
@@ -107,7 +83,9 @@
   "notes": [
     "No fabricated pixel coordinates",
     "Physical LED order still to verify",
-    "No boot pin or carrier signoff until exact board identified"
+    "No boot pin or carrier signoff until exact board identified",
+    "Owner revised David V1 to two outputs: status plus one serial decorative chain",
+    "Seller header chart inspected; continuity and power/backfeed schematic still unverified"
   ],
   "profile_status": "provisional",
   "capabilities": [

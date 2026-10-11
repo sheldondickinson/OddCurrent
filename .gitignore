@@ -1,5 +1,8 @@
 .local/
 .venv/
+.firmware-venv/
+.playwright-cli/
+output/
 __pycache__/
 .pytest_cache/
 *.pyc

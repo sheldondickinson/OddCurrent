@@ -1,0 +1,131 @@
+{
+  "schema_version": "1.0.0",
+  "product_family": "OddCurrent",
+  "profile_id": "david-v1-six-output-option",
+  "friendly_name": "David six-output option",
+  "hardware": {
+    "mcu": "ESP32-S3",
+    "flash_mb": 16,
+    "psram_mb": 8,
+    "board_carrier": "TO_BE_VERIFIED",
+    "microphone": {
+      "model": "INMP441",
+      "interface": "I2S",
+      "sck_gpio": 10,
+      "ws_gpio": 11,
+      "sd_gpio": 12,
+      "lr_select": "GND"
+    }
+  },
+  "pixels": {
+    "type": "WS2811_RGB",
+    "voltage_v": 5,
+    "estimated_total_min": 196,
+    "estimated_total_max": 197,
+    "projection": "XY_FRONT_2D",
+    "map_file": null,
+    "mapping_status": "UNMEASURED",
+    "specification_evidence": "Owner reported WS2811 seeds, 5 V on 2026-10-12; timing, colour order and current not measured",
+    "colour_order": null,
+    "protocol_hz": null
+  },
+  "outputs": [
+    {
+      "key": "status",
+      "gpio": 4,
+      "count_min": 1,
+      "count_max": 2,
+      "zones": [
+        "penis-status"
+      ],
+      "priority": "system-overrides-effects"
+    },
+    {
+      "key": "left-arm",
+      "gpio": 5,
+      "estimate": 20,
+      "zones": [
+        "left-arm",
+        "left-hand"
+      ]
+    },
+    {
+      "key": "right-arm",
+      "gpio": 6,
+      "estimate": 20,
+      "zones": [
+        "right-arm",
+        "right-hand"
+      ]
+    },
+    {
+      "key": "left-leg",
+      "gpio": 7,
+      "estimate": 28,
+      "zones": [
+        "left-leg",
+        "left-foot"
+      ]
+    },
+    {
+      "key": "right-leg",
+      "gpio": 8,
+      "estimate": 27,
+      "zones": [
+        "right-leg",
+        "right-foot"
+      ]
+    },
+    {
+      "key": "core",
+      "gpio": 9,
+      "estimate": 100,
+      "zones": [
+        "torso",
+        "pelvis",
+        "head",
+        "hair"
+      ]
+    }
+  ],
+  "buttons": [
+    {
+      "key": "power",
+      "gpio": 13
+    },
+    {
+      "key": "scene",
+      "gpio": 14
+    },
+    {
+      "key": "audio",
+      "gpio": 15
+    },
+    {
+      "key": "setup",
+      "gpio": 16,
+      "recessed": true
+    }
+  ],
+  "notes": [
+    "No fabricated pixel coordinates",
+    "Physical LED order still to verify",
+    "No boot pin or carrier signoff until exact board identified"
+  ],
+  "profile_status": "provisional",
+  "capabilities": [
+    "lighting",
+    "audio-reactive",
+    "zones",
+    "xy-map",
+    "status"
+  ],
+  "height_mm": 450,
+  "validation": {
+    "carrier": false,
+    "pixels": false,
+    "concurrent_peripherals": false,
+    "electrical": false,
+    "thermal": false
+  }
+}

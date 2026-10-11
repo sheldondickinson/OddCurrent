@@ -9,11 +9,7 @@ straps, 19/20 for native USB, 17/18 for expansion and 43/44 for logging.
 | Output | Proposed GPIO | Provisional pixels |
 |---|---:|---:|
 | Protected status | 4 | 1–2 |
-| Left arm / hand | 5 | 20 |
-| Right arm / hand | 6 | 20 |
-| Left leg / foot | 7 | 28 |
-| Right leg / foot | 8 | 27 |
-| Core: torso/pelvis then head/hair | 9 | 100 |
+| Body: all decorative regions in one serial chain | 5 | 195 |
 | INMP441 BCLK / WS / DOUT | 10 / 11 / 12 | L/R grounded, 3.3 V only |
 | Power / scene / audio / recessed setup | 13 / 14 / 15 / 16 | active low to GND |
 
@@ -23,7 +19,7 @@ requires I2S timing/channel validation, not an analogue ADC input.
 
 ## Signal and power requirements
 
-For **confirmed 5 V pixels only**, investigate six channels of SN74AHCT245 at
+For **confirmed 5 V pixels only**, investigate two channels of SN74AHCT245 at
 5 V, A→B DIR fixed high, OE held disabled until supplies and MCU are stable,
 100 nF at VCC and a short common-ground return. A seventh/eighth unused channel
 must not float. Put a series resistor near each data driver; choose its final
@@ -46,8 +42,8 @@ or a PSU purchase recommendation. A firmware limit does not replace fuses.
 
 - [ ] Exact carrier schematic/pin continuity and module marking recorded.
 - [ ] Actual chipset, voltage, colour order and per-pixel current confirmed.
-- [ ] Six outputs concurrently driven with mic + Wi-Fi + WSS + native UI.
-- [ ] Scope data at last pixel, full white and audio stress; no dropped channels.
+- [ ] Two outputs concurrently driven with mic + Wi-Fi + WSS + native UI.
+- [ ] Scope data at last pixel, full white and audio stress; no dropped channels; six-output alternative separately tested.
 - [ ] Supply sizing, measured current, fuses, gauge, injection and voltage drop.
 - [ ] Thermal soak at enforced current limit inside assembled 450 mm enclosure.
 - [ ] Cold/hot boot, brownout, supply-order and USB backfeed checks.
@@ -58,3 +54,21 @@ or a PSU purchase recommendation. A firmware limit does not replace fuses.
 
 Earlier printable David geometry is not proof of fit for this 450 mm build:
 measure internal channels, base, LED carrier dimensions and microphone opening.
+
+## Seller evidence, 2026-10-12
+
+Owner supplied product images for a dual USB-C CH343P carrier with WROOM-1
+N16R8 marking, an 1117-family regulator and RGB LED labelled GPIO48. Header
+labels show all proposed pins. The graphic incorrectly implies every exposed
+memory GPIO can be freely used; reserve GPIO35–37 for octal PSRAM. No carrier
+schematic or exact revision was supplied, so continuity, regulator capacity and
+USB/external-5V backfeed remain open. GPIO6–9 are free in the two-output build.
+Do not split the body data signal into parallel branches: regions use serial
+physical indexes, measured sub-zone ranges and/or the calibrated XY map.
+
+## Pixel report
+
+Owner reports **WS2811 seed pixels, 5 V**, 2026-10-12. This establishes the
+intended supply class, not measured current, channel order or bit timing. Confirm
+800 kHz versus 400 kHz against the actual product/datasheet, test R/G/B individually,
+and measure full-white current on a spare sample before final PSU/fuse sizing.

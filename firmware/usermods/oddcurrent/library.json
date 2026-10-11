@@ -1,0 +1,7 @@
+{
+  "name": "oddcurrent",
+  "version": "0.1.0",
+  "license": "MIT",
+  "build": {"libArchive": false},
+  "dependencies": [{"owner": "links2004", "name": "WebSockets", "version": "2.6.1"}]
+}

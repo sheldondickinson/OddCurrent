@@ -1,0 +1,11 @@
+{
+  "repository": "https://github.com/wled/WLED.git",
+  "version": "16.0.1",
+  "revision": "29b389df1c1aaec6ff53aea742d17063b985906c",
+  "environment": "oddcurrent_s3_n16r8",
+  "profile_schema": "1.0.0",
+  "manifest_schema": "1.0.0",
+  "protocol_version": 1,
+  "hardware_accepted": false,
+  "release_status": "development-only"
+}
