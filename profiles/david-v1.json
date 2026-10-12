@@ -18,7 +18,18 @@
     },
     "onboard_rgb_gpio": null,
     "onboard_rgb_evidence": "Supplied pin diagram labels GPIO47; GPIO48 is common on similar carriers. Exact carrier continuity required; reserve both.",
-    "sample_memory_evidence": "One USB-only sample on 2026-10-12: ROM S3 rev0.2, 16MB flash, 8MB PSRAM; native boot/free PSRAM observed. Carrier circuit and peripheral gates remain false."
+    "sample_memory_evidence": "One USB-only sample on 2026-10-12: ROM S3 rev0.2, 16MB flash, 8MB PSRAM; native boot/free PSRAM observed. Carrier circuit and peripheral gates remain false.",
+    "pixel_data_drive": {
+      "mode": "direct-gpio",
+      "logic_voltage_v": 3.3,
+      "level_translator": false,
+      "owner_decision_date": "2026-10-12",
+      "logic_margin_tradeoff": "explicitly accepted by owner; actual lot and final harness reliability not yet validated",
+      "first_pixel_data_leads": "as short as practical with ground reference",
+      "series_resistors": "optional; values/population after actual wiring tests",
+      "pulldowns": "optional; DNP until testing justifies",
+      "reconsideration": "only reproduced signal-integrity evidence and owner decision"
+    }
   },
   "pixels": {
     "type": "WS2811_RGB",
@@ -87,7 +98,8 @@
     "Physical LED order still to verify",
     "No boot pin or carrier signoff until exact board identified",
     "Owner revised David V1 to two outputs: status plus one serial decorative chain",
-    "Seller header chart inspected; continuity and power/backfeed schematic still unverified"
+    "Seller header chart inspected; continuity and power/backfeed schematic still unverified",
+    "Owner selected direct GPIO4/5 drive with accepted 3.3V logic margin; no translator; both lamps require qualification"
   ],
   "profile_status": "provisional",
   "capabilities": [

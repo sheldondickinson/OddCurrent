@@ -21,6 +21,7 @@ operating facts and endpoints remain in the owner’s canonical registry.
 | Factory material | Two unique private identities, setup QR SVGs, claim inserts and HTTPS NFC destinations generated; credentials/claims stored hash-only on server; owner-encrypted archive round-trip checked |
 | USB-only board | One owner-connected bare board identified as S3 rev0.2, 16 MB flash/8 MB PSRAM; full pre-install flash backed up and digest-verified, encrypted round-trip checked; bootloader/partition/app readback verified after development install |
 | Bare-board boot | Four native WLED 16.0.1 serial JSON responses, uptime46→56s, free PSRAM8,287,687 bytes, minimum free heap223,060 bytes; zero LEDs, hardware activation disabled, no factory identity/cloud connection |
+| Direct-drive design | Owner accepts GPIO4/5 direct 3.3 V drive, no translator, on12 October2026. This is a design decision; actual signal reliability remains untested |
 | Hardware/peripherals | No pixels, microphone, buttons or external power attached. Exact carrier/power circuit and all peripheral/electrical/thermal acceptance remain pending |
 | Onboarding/QR/NFC | AP-only portal and tools implemented; destination HTTP routes exist. Real phones, tags, captive portal and Wi-Fi association untested |
 | OTA/tamper resistance | Cloud updates disabled; signing, rollback, secure boot and flash encryption not accepted |
@@ -40,7 +41,9 @@ imported. Physical-button-gated serial provisioning is still required.
 ## Release blockers
 
 1. Exact carrier revision/power schematic or continuity and USB backfeed proof.
-2. Pixel timing (400/800 kHz), colour order, current, harness/fuse/PSU design and soak.
+2. Pixel timing (400/800 kHz), colour order, current, direct-drive harness/fuse/PSU
+   design and both-lamp qualification per [prototype plan](../hardware/prototype-testing.md).
+   The accepted logic-margin trade-off is not a requirement to add a translator.
 3. Two simultaneous outputs + INMP441 + WSS + native UI; reconnect/heap and
    local-control latency. Six-output alternative requires a separate bench test.
 4. Both real maps and anatomical masks, hot/cold boots, switch gestures,

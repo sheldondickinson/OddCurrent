@@ -85,4 +85,8 @@ simulator and cannot be enabled in production configuration.
 - [ESP32-S3 RMT](https://docs.espressif.com/projects/esp-idf/en/v4.4.6/esp32s3/api-reference/peripherals/rmt.html)
 - [Espressif hardware design guidelines](https://documentation.espressif.com/esp-hardware-design-guidelines/en/latest/esp32s3/index.html)
 - [INMP441 manufacturer datasheet](https://www.invensense.tdk.com/en-us/download-resource/ds-inmp441-00-inmp441-datasheet)
-- [TI AHCT245 datasheet](https://www.ti.com/lit/ds/symlink/sn74ahct245.pdf)
+- [Worldsemi driver family](https://world-semi.com/ws2811-family/) — match the actual seed driver revision; no universal input threshold assumed
+
+David V1 uses direct GPIO4/5 signalling without a translator. The owner explicitly
+accepts the 3.3 V margin trade-off; the chosen harness must pass the
+[prototype qualification](../hardware/prototype-testing.md) before shipment.

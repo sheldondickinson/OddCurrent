@@ -13,7 +13,10 @@ David V1 now uses **two LED outputs**, per the owner's revised requirement:
 GPIO4 for 1–2 protected status pixels, GPIO5 for one serial 195-pixel decorative
 chain. Anatomical zones and sparse whole-body XY mapping are logical. A provisional
 six-output alternative remains in `profiles/`; it is not the selected gift build.
-Owner reports 5 V WS2811 seeds. Actual timing, colour order, current and carrier
+David V1 uses direct 3.3 V GPIO drive with no translator, by owner decision; the
+logic-margin trade-off is accepted and actual reliability remains a shipment gate.
+See the [wiring diagram](hardware/david-v1-wiring.md) and
+[prototype plan](hardware/prototype-testing.md). Owner reports 5 V WS2811 seeds. Actual timing, colour order, current and carrier
 power schematic remain unconfirmed.
 
 ## Run locally

@@ -8,8 +8,8 @@ straps, 19/20 for native USB, 17/18 for expansion and 43/44 for logging.
 
 | Output | Proposed GPIO | Provisional pixels |
 |---|---:|---:|
-| Protected status | 4 | 1–2 |
-| Body: all decorative regions in one serial chain | 5 | 195 |
+| Protected status, direct GPIO | 4 | 1–2 |
+| Body: direct GPIO, one serial chain | 5 | 195 |
 | INMP441 BCLK / WS / DOUT | 10 / 11 / 12 | L/R grounded, 3.3 V only |
 | Power / scene / audio / recessed setup | 13 / 14 / 15 / 16 | active low to GND |
 
@@ -19,14 +19,24 @@ requires I2S timing/channel validation, not an analogue ADC input.
 
 ## Signal and power requirements
 
-For **confirmed 5 V pixels only**, investigate two channels of SN74AHCT245 at
-5 V, A→B DIR fixed high, OE held disabled until supplies and MCU are stable,
-100 nF at VCC and a short common-ground return. A seventh/eighth unused channel
-must not float. Put a series resistor near each data driver; choose its final
-value from scope/signal tests. Add data pulldowns and verify no parasitic powering
-with either supply absent. This part's datasheet does not by itself establish safe
-partial-power behaviour for the entire circuit; use an appropriate isolation/OE
-power-good design if tests require it. A voltage divider is not a level shifter.
+Owner decision, 12 October 2026: **direct GPIO drive, no logic-level shifter**.
+GPIO4 directly drives1–2 protected status pixels; GPIO5 directly drives the
+approximately195 body pixels. Keep both first-pixel data leads as short as
+practical alongside a proper ground reference. LEDs have independent protected
+5 V power and a common ground with the controller.
+
+The 3.3 V logic-level margin is an explicitly accepted engineering trade-off.
+The actual driver revision/input thresholds still need matching; reliable operation
+must be demonstrated on both final lamps before shipment. This accepted choice
+is not a completed physical reliability test. Series resistors and pulldowns are
+optional test positions, with population/values decided by the actual wiring and
+measured results. No translator or fixed passive values are required by this plan.
+
+Follow the [practical wiring diagram](david-v1-wiring.md) and
+[prototype testing plan](prototype-testing.md). Do not repeatedly reopen the
+owner's direct-drive decision. If testing reproduces signal-integrity problems,
+record the evidence, distinguish power/configuration faults, and propose corrective
+options before changing the chosen design.
 
 Do not route pixel current through the ESP board, USB cable, breadboard or thin
 data connectors. Fuse branches close to the external isolated SELV PSU. Use
@@ -43,7 +53,8 @@ or a PSU purchase recommendation. A firmware limit does not replace fuses.
 - [ ] Exact carrier schematic/pin continuity and module marking recorded.
 - [ ] Actual chipset, voltage, colour order and per-pixel current confirmed.
 - [ ] Two outputs concurrently driven with mic + Wi-Fi + WSS + native UI.
-- [ ] Scope data at last pixel, full white and audio stress; no dropped channels; six-output alternative separately tested.
+- [ ] Direct GPIO operation qualified on both final lamps: first-pixel waveforms, full-white/audio stress, starts/resets, power order and zero observed data faults; optional passive values recorded.
+- [ ] Six-output alternative separately tested if ever selected.
 - [ ] Supply sizing, measured current, fuses, gauge, injection and voltage drop.
 - [ ] Thermal soak at enforced current limit inside assembled 450 mm enclosure.
 - [ ] Cold/hot boot, brownout, supply-order and USB backfeed checks.
