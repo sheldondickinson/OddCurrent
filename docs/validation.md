@@ -6,13 +6,14 @@ operating facts and endpoints remain in the owner’s canonical registry.
 
 | Check | Actual result / limitation |
 |---|---|
-| Backend/profile/factory/backup tests | 36 pytest tests passed locally on Python 3.12 and in CI; no physical device |
+| Backend/profile/factory/backup tests | 37 pytest tests passed locally on Python 3.12 and in CI; no physical device |
 | Firmware policy | Host C++ tests passed for debounce, gestures, setup holds, update lockout, status priority, expiry and replay |
 | Public source | Tracked-file scan passed; private runtime/factory files excluded; owner endpoints and paths absent |
 | Backend dependency audit | No known vulnerabilities returned by dated requirements audit |
 | Desktop/mobile UI | Browser-rendered simulator login and Sunset acknowledgement; 390 px viewport has 390 px document width |
+| David artwork | Refined generated marble illustration with modest drapery, preserved alpha and 114,658-byte WebP; desktop/390 px preview and deployed narrow layout checked; explicit MIME regression passes in minimal Linux |
 | Calibration editor | Starts with zero measured coordinates; completeness/duplicate/status-exclusion validation implemented |
-| GitHub CI | Software, firmware and restrictive-checkout container jobs all passed for `828f650ac1b20089392ec4237166831161cffe8f`, [run 38185006643](https://github.com/sheldondickinson/OddCurrent/actions/runs/38185006643) |
+| GitHub CI | Software, firmware and restrictive-checkout container jobs all passed for `ca9cb968045dcbd40b694e120662ac43c7f3871f`, [run 38191735969](https://github.com/sheldondickinson/OddCurrent/actions/runs/38191735969) |
 | ESP32 compile | Pinned WLED 16.0.1 S3 N16R8 target compiled; downloaded binary hashes matched CI; unsigned development artifacts only |
 | Hosted application | Restrictive read-only production container running; HTTPS health and anonymous API denial verified; dedicated workload read accepted and unrelated record read denied |
 | OIDC | Real owner browser code/PKCE callback completed; operator fleet displays both unclaimed, offline lamps. Recipient and unrelated-account browser acceptance remains pending |
@@ -26,8 +27,10 @@ operating facts and endpoints remain in the owner’s canonical registry.
 | Onboarding/QR/NFC | AP-only portal and tools implemented; destination HTTP routes exist. Real phones, tags, captive portal and Wi-Fi association untested |
 | OTA/tamper resistance | Cloud updates disabled; signing, rollback, secure boot and flash encryption not accepted |
 
-The hosted runtime uses the previously verified backend commit `ddf777b`; subsequent
-changes through `828f650` affect firmware/factory tooling, not the deployed backend.
+Initial hosted activation used `ddf777b`. The visual update deployed `ca9cb96`:
+new art, contained responsive sizing, versioned CSS and explicit WebP MIME typing;
+authentication and device protocol are unchanged. The physical USB sample remains
+on the `828f650` development firmware; no reflash was performed for the UI change.
 The USB board is unassigned and its factory namespace is virgin; the two real
 registrations have never connected. No synthetic test values were
 written to their device records.
