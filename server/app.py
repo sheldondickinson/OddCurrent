@@ -1,6 +1,7 @@
 """Single-process API with OIDC, scoped sessions, and outbound device transport."""
 import asyncio
 import json
+import mimetypes
 import secrets
 import time
 from collections import defaultdict, deque
@@ -24,6 +25,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def create_app(config: Config):
     config.validate()
+    # Minimal Linux images may not include an OS MIME database for WebP.
+    mimetypes.add_type('image/webp', '.webp')
     app = FastAPI(title='OddCurrent', docs_url=None, redoc_url=None, openapi_url=None)
     store = Store(config.database)
     app.state.store = store

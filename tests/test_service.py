@@ -158,3 +158,15 @@ def test_only_explicit_operator_subject_gets_fleet_authority(setup):
     client.cookies.set('oc_session',token)
     assert client.get('/api/devices/david-001').status_code==403
     assert client.get('/api/devices').json()==[]
+
+def test_webp_art_served_without_os_mime_database(tmp_path, monkeypatch):
+    import mimetypes
+    mimetypes.init()
+    monkeypatch.delitem(mimetypes.types_map, '.webp', raising=False)
+    monkeypatch.delitem(mimetypes.common_types, '.webp', raising=False)
+    app=create_app(Config(database=str(tmp_path/'art.sqlite'), demo=True))
+    with TestClient(app, base_url='http://127.0.0.1:8787') as client:
+        response=client.get('/assets/david-statue.webp')
+    assert response.status_code==200
+    assert response.headers['content-type']=='image/webp'
+    assert response.content[:4]==b'RIFF' and response.content[8:12]==b'WEBP'
