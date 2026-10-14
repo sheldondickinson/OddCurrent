@@ -85,7 +85,9 @@ Connect only after carrier labels and 3.3 V rail capacity have been checked.
 GPIO13–16 use input pullups in the extension. Keep switch and microphone wiring
 away from heavy LED supply loops. Anatomical zones and XY coordinates are logical
 maps of the body chain, not extra outputs. Protected status remains physical bus0
-on GPIO4 and is excluded from decorative maps.
+on GPIO4 and is excluded from decorative maps. While on, these pixels mirror
+the first two final body pixels; standby alternates blue/violet breaths, and a
+device fault takes priority with red. This changes firmware behaviour only.
 
 ## Accepted margin and change control
 

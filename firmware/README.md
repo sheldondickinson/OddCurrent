@@ -39,9 +39,12 @@ tamper-proof.
 
 Four bounded hooks are checked by the build script:
 
-1. After pixel mapping, immediately before `BusManager::show()`, render physical
-   status bus0 with its own bounded brightness. This preserves status when the
-   body is off and prevents realtime/native/audio effects from painting over it.
+1. After pixel mapping, immediately before `BusManager::show()`, drive physical
+   status bus0. While on, its two pixels mirror the first two final body pixels
+   at the body's global brightness, including native/audio/realtime/region effects.
+   While off, they breathe alternately in blue/violet at bounded status brightness.
+   A device fault overrides either mode with red. Wi-Fi/cloud loss does not take
+   over a running local effect. Status indexes remain excluded from calibration.
 2. Before native serial processing, permit physical-button-gated factory import.
    After factory identity exists the native serial handler remains available.
 3. On the password-protected AP interface, the root serves a minimal OddCurrent

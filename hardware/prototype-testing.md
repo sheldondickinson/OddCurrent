@@ -81,7 +81,7 @@ Use the intended protected current limit and assembled base/enclosure.
 | Warm resets | 30 resets | Both outputs, local UI, mic and buttons recover correctly |
 | Wi-Fi/cloud recovery | 20 controlled disconnect/reconnect cycles | Local controls remain usable; connection recovers; no stale command execution |
 | Load/thermal run | 24 h: recorded static-load and dynamic/audio blocks | Zero observed data glitches/uncommanded resets; current/voltage/temperature within limits fixed before the test |
-| Status isolation | At least30 repetitions across native/audio/realtime modes | Body effects never paint status; body off still permits bounded system status |
+| Status priority | At least30 repetitions across native/audio/realtime modes | On: both status pixels follow final body colours; off: alternate blue/violet breaths; fault overrides either with red; normal brightness restored when on |
 | Final harness | Both actual lamps, unchanged wiring/passive values | No visible flicker, corrupt colours, spurious resets or failed transitions |
 | Recovery/onboarding | Both lamps; iPhone and Android, intended two-home setup | Correct private identity, QR/AP Wi-Fi setup, recovery, NFC readback and internet-outage local operation |
 

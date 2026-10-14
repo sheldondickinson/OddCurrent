@@ -2,6 +2,21 @@
 #include <cassert>
 using namespace oddcurrent;
 int main() {
+  assert(statusDisplay(true,false)==StatusDisplay::body);
+  assert(statusDisplay(false,false)==StatusDisplay::standby);
+  assert(statusDisplay(true,true)==StatusDisplay::fault);
+  assert(statusDisplay(false,true)==StatusDisplay::fault);
+  assert((standbyColour(0,0)&255)<(standbyColour(0,1)&255));
+  assert((standbyColour(2400,0)&255)>(standbyColour(2400,1)&255));
+  assert(standbyColour(0,0)==standbyColour(9600,0));
+  bool sawPurple=false;
+  for(unsigned ms=0;ms<9600;ms+=40)for(unsigned pixel=0;pixel<2;++pixel) {
+    uint32_t c=standbyColour(ms,pixel);
+    assert((c&0xFF00)==0 && (c&255)>=8 && (c&255)<=64);
+    assert((c>>16)<=(c&255));
+    sawPurple=sawPurple || (c>>16)>0;
+  }
+  assert(sawPurple);
   assert(!lightingAllowed(false,false,true));
   assert(lightingAllowed(false,true,true)); // prototype control does not assert acceptance
   assert(lightingAllowed(true,false,true));
