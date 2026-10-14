@@ -30,6 +30,13 @@ AP password private enough to avoid an attacker nearby altering Wi-Fi. Disable
 the AP after a successful association and retain access only via the recessed
 recovery button / failed Wi-Fi boot. Home Wi-Fi credentials stay on the MCU.
 
+Keep the setup page at the AP's canonical IPv4 address. The page uses
+`Referrer-Policy: same-origin`: `no-referrer` makes a native form POST send
+`Origin: null`, which conflicts with the required exact-origin check. The join
+handler still requires the AP interface, canonical Host, exact Origin and current
+boot's random CSRF token. Missing/null/foreign origins and stale tokens are rejected;
+reopen the setup page after a reboot to obtain a fresh token.
+
 ## Recipient flow
 
 1. Power on. Scan the base Wi-Fi QR and join the unique setup network.
