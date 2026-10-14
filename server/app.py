@@ -208,6 +208,8 @@ def create_app(config: Config):
         live = connections.get(device)
         if not live or not row['last_seen'] or time.time() - row['last_seen'] >= 45:
             raise HTTPException(409, 'Lamp offline; nothing queued')
+        if not json.loads(row['reported']).get('lighting_ready', False):
+            raise HTTPException(409, 'Lighting setup is not enabled on this lamp; nothing queued')
         cmd = store.command(device, payload)
         cmd['session'] = live[1]
         try:
@@ -343,7 +345,8 @@ def create_app(config: Config):
                 connections[row['id']] = (sim, 'simulator', time.time())
                 state = {'on': True, 'brightness': 65, 'scene': 'gallery', 'music': False, 'sensitivity': 50,
                          'status_brightness': 5, 'rssi': -53, 'firmware': 'SIMULATOR', 'boot_reason': 'simulation',
-                         'reconnects': 0, 'uptime_s': 0, 'zones_ready': False, 'xy_ready': False}
+                         'reconnects': 0, 'uptime_s': 0, 'zones_ready': False, 'xy_ready': False,
+                         'lighting_ready': True, 'hardware_ready': False}
                 store.execute('UPDATE devices SET last_seen=?,reported=? WHERE id=?', (time.time(), json.dumps(state), row['id']))
             return {'simulator': True}
 

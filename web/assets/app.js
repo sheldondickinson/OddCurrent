@@ -20,7 +20,8 @@ function metric(label, value) {
 }
 function render() {
   const r=lamp?.reported || {}, online=!!lamp?.online;
-  const canControl=!!session && online && !pending;
+  const lightingReady=r.lighting_ready===true;
+  const canControl=!!session && online && lightingReady && !pending;
   $('connection').textContent=lamp?.demo ? 'Local simulator' : online ? 'Connected' : 'Offline';
   $('connection').className='chip'+(online?' online':'');
   $('serial').textContent=lamp?.id || 'Your illuminated companion';
@@ -43,11 +44,13 @@ function render() {
   for(const id of ['sensitivity','statusBrightness']) $(id).disabled=!canControl;
   $('zoneApply').disabled=!canControl || !r.zones_ready;
   $('zoneStatus').textContent=r.zones_ready?'Measured regions available.':'Physical calibration required for independent zones.';
-  $('commandStatus').textContent=pending?'Waiting for the lamp to acknowledge…':!session?'Sign in to control your lamp.':!online?'Lamp offline. Local buttons still work; cloud changes are not queued.':lamp.demo?'SIMULATOR · Changes affect this preview only.':'Ready when you are.';
+  $('commandStatus').textContent=pending?'Waiting for the lamp to acknowledge…':!session?'Sign in to control your lamp.':!online?'Lamp offline. Local buttons still work; cloud changes are not queued.':!lightingReady?'Lighting setup is not enabled on this lamp. Local WLED controls remain available.':lamp.demo?'SIMULATOR · Changes affect this preview only.':'Ready when you are.';
   $('diagnostics').replaceChildren();
   metric('Device',lamp?.id); metric('Firmware',r.firmware); metric('Wi-Fi signal',r.rssi==null?null:`${r.rssi} dBm`);
   metric('Last seen',lamp?.last_seen ? new Date(lamp.last_seen*1000).toLocaleString() : null);
   metric('Boot reason',r.boot_reason); metric('Reconnects',r.reconnects); metric('2D map',r.xy_ready?'Calibrated':'Needs calibration');
+  metric('Lighting controls',lightingReady?'Enabled':'Setup required');
+  metric('Hardware acceptance',r.hardware_ready?'Complete':'Prototype · testing pending');
   $('releaseStatus').textContent='Updates stay unavailable until hardware acceptance and signed release validation. Scheduling is planned for a later release.';
 }
 async function refresh() {

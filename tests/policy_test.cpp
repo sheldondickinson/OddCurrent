@@ -2,6 +2,11 @@
 #include <cassert>
 using namespace oddcurrent;
 int main() {
+  assert(!lightingAllowed(false,false,true));
+  assert(lightingAllowed(false,true,true)); // prototype control does not assert acceptance
+  assert(lightingAllowed(true,false,true));
+  assert(!lightingAllowed(false,true,false)); // opt-in cannot bypass invalid wiring configuration
+  assert(!lightingAllowed(true,true,false));
   Button b;
   assert(b.tick(true,0)==Action::none);
   assert(b.tick(false,10)==Action::none); // bounce rejected

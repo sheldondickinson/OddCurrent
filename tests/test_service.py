@@ -28,7 +28,17 @@ def headers(csrf): return {'Origin':ORIGIN,'X-CSRF-Token':csrf}
 
 def telemetry(**values):
     return dict(type='telemetry',on=True,brightness=65,scene='gallery',music=False,
-                rssi=-60,firmware='16.0.1',boot_reason='power_on',reconnects=0,uptime_s=10,**values)
+                rssi=-60,firmware='16.0.1',boot_reason='power_on',reconnects=0,uptime_s=10,
+                **({'lighting_ready':True} | values))
+
+def test_online_lamp_without_lighting_setup_cannot_queue_commands(setup):
+    app,db,client,owner,csrf,*_=setup
+    with client.websocket_connect('wss://lamp.example.invalid/ws/devices/david-001',headers={'Authorization':'Bearer '+'a'*48}) as ws:
+        ws.receive_json();ws.send_json(telemetry(lighting_ready=False));ws.receive_json()
+        response=client.post('/api/devices/david-001/commands',json={'scene':'blue'},headers=headers(csrf))
+        assert response.status_code==409
+        assert 'Lighting setup' in response.json()['detail']
+        assert db.all('SELECT * FROM commands')==[]
 
 def test_anonymous_and_cross_owner_denied(setup):
     app,db,client,owner,csrf,stranger,stranger_csrf=setup

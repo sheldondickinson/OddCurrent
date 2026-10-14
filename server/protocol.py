@@ -49,6 +49,8 @@ class Telemetry(BaseModel):
     uptime_s: StrictInt = Field(ge=0, le=4294967295)
     zones_ready: StrictBool = False
     xy_ready: StrictBool = False
+    lighting_ready: StrictBool = False
+    hardware_ready: StrictBool = False
 
 class Ack(BaseModel):
     model_config = ConfigDict(extra='forbid')

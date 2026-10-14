@@ -64,3 +64,22 @@ conditional 60 mA example remains 11.82 A / 59.1 W for 197 pixels, not a measure
 requirement. Cloudflare Tunnel runs on the server; the ESP32 only opens outbound
 certificate-verified WSS. Native WLED UI and audio stay local by design, with actual
 internet-outage acceptance still pending bench tests.
+
+## Prototype lighting controls
+
+Firmware 0.2 separates `lighting_ready` from `hardware_ready`. Final electrical,
+thermal, peripheral and mapping acceptance remains independent of basic lighting
+control. A trusted local configuration may explicitly set
+`um.OddCurrent.prototype_controls=true` with `hardware_ready=false` and the
+actual `status_count` (1 or 2). This defaults off. Control and the protected status
+overlay require exactly two digital buses: bus0 GPIO4 at index0 with the declared
+status count, followed by a nonempty GPIO5 body bus at that offset. An invalid
+layout keeps cloud lighting disabled even when opted in. Keep the bench current
+limit and existing factory/Wi-Fi data; this setting is not a wiring or shipping
+sign-off. Zones/XY still require their separate measured map acceptance.
+
+The device reports both readiness fields. The website disables controls until
+`lighting_ready` is true; the backend rejects disabled requests before queueing.
+Firmware publishes changed telemetry before its command acknowledgement so the
+website's subsequent refresh reads the accepted state. Deploy the compatible
+backend before the new firmware because telemetry uses a strict field contract.
