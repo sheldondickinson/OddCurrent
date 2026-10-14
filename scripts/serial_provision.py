@@ -17,8 +17,10 @@ def main():
     bundle['status_count']=0
     body=json.dumps(bundle,separators=(',',':')).encode()+b'\n'
     if len(body)>6000:raise SystemExit('Factory bundle too large for MCU staging buffer')
-    with serial.Serial(a.port,115200,timeout=1,write_timeout=5) as device:
-        device.dtr=False;device.rts=False;time.sleep(1)
+    device=serial.Serial(port=None,baudrate=115200,timeout=1,write_timeout=5)
+    device.dtr=False;device.rts=False;device.port=a.port
+    with device:
+        time.sleep(1)
         device.reset_input_buffer();device.write(body);device.flush()
         deadline=time.monotonic()+10
         while time.monotonic()<deadline:

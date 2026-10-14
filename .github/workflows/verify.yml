@@ -30,6 +30,13 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: '24'}
       - run: pip install -r requirements-firmware.txt
+      - run: python scripts/build_firmware.py --prepare-only
+      - name: Build and test the retained native WLED interface
+        working-directory: .local/WLED
+        run: |
+          npm ci
+          npm run build
+          npm test
       - run: python scripts/build_firmware.py
       - run: sha256sum firmware/build/*.bin > firmware/build/SHA256SUMS
       - uses: actions/upload-artifact@v4

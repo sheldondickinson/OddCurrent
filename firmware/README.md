@@ -4,6 +4,16 @@ Pinned upstream: WLED 16.0.1,
 `29b389df1c1aaec6ff53aea742d17063b985906c`. The selected compile target is
 QIO 16 MB flash and OPI 8 MB PSRAM. It targets the CH343P UART USB connector
 (`ARDUINO_USB_CDC_ON_BOOT=0`); native USB is not assumed to be the serial channel.
+
+Button diagnostics are read-only native serial JSON info: `{"v":true}` returns
+`info.oddcurrent.button_inputs` for GPIO13–16 (raw level, active-low pressed state
+and allocation success). It remains available during the virgin GPIO16 service
+hold; the factory credential import still requires that hold. Run
+`python scripts/button_monitor.py --port <confirmed-port> --seconds 60`, then
+press and release each external button briefly, one at a time. Avoid long setup
+holds during monitoring because the existing 5/15-second recovery actions apply.
+The monitor never sets GPIO directions, writes configuration or exposes secrets.
+Digital levels are not voltage, continuity, waveform or debounce measurements.
 Confirm actual carrier and USB connector behaviour before uploading.
 
 The upstream default Tasmota framework omits `WiFiClientSecure`. This target uses
