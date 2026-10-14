@@ -143,7 +143,7 @@ $('demo').onclick=async()=>{
 let pixels=[], width=24,height=48;
 for(const option of $('zone').options)if(option.value)$('mapZone').append(option.cloneNode(true));
 function drawMap() {
-  const grid=$('mapGrid');grid.replaceChildren();grid.style.gridTemplateColumns=`repeat(${width},minmax(18px,1fr))`;
+  const grid=$('mapGrid');grid.replaceChildren();grid.style.gridTemplateColumns=`repeat(${width},minmax(48px,1fr))`;
   for(let y=0;y<height;y++)for(let x=0;x<width;x++) {
     const led=pixels.find(p=>p.x===x&&p.y===y),button=document.createElement('button');button.type='button';button.setAttribute('role','gridcell');
     button.setAttribute('aria-label',`Column ${x}, row ${y}${led?`, body pixel ${led.index}, ${led.zone}`:', empty'}`);

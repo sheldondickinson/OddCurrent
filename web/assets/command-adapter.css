@@ -1,0 +1,30 @@
+/* OddCurrent consumer adapter; upstream assets remain byte-identical to v1.1.0. */
+:root{--app-brand-coral:#ff805a;--app-brand-cyan:#5bc8e8;--app-font-editorial:Georgia,serif;--navy:var(--c313-color-background);--paper:var(--c313-color-text);--card:var(--c313-color-surface);--slate:var(--c313-color-border);--muted:var(--c313-color-muted);--coral:var(--c313-color-accent);--cyan:var(--app-brand-cyan);--lime:var(--c313-color-success)}
+.c313 body{background:var(--c313-color-background);color:var(--c313-color-text);font-family:var(--c313-font-family);font-size:var(--c313-type-body);line-height:var(--c313-leading-body)}
+.c313 .shell{max-width:var(--c313-size-content);padding-inline:var(--c313-space-24);padding-bottom:max(var(--c313-space-24),env(safe-area-inset-bottom))}
+.c313 :where(button,a,input,select,summary):focus-visible{outline:var(--c313-size-focus) solid var(--c313-color-accent);outline-offset:var(--c313-size-focus-offset)}
+.c313 :where(button:not(#mapGrid button),.primary,.secondary,.quiet,summary){min-height:var(--c313-size-target)}
+.c313 :where(input:not([type=range]),select){min-height:var(--c313-size-target);font-size:var(--c313-type-body)}
+.c313 :where(.primary,.secondary,.c313-button){border-radius:var(--c313-radius-control);padding:var(--c313-space-12) var(--c313-space-16);font-size:var(--c313-type-label)}
+.c313 .primary{background:var(--c313-color-accent);color:var(--c313-color-on-accent);border-color:var(--c313-color-accent)}
+.c313 .secondary{background:var(--c313-color-elevated);border-color:var(--c313-color-control-border);color:var(--c313-color-text)}
+.c313 :where(.control-panel,.access-card,.calibration,.device-card){border-radius:var(--c313-radius-card);padding:var(--c313-space-24);background:var(--c313-color-surface);border-color:var(--c313-color-border)}
+.c313 :where(.detail-body input:not([type=range]),select,dialog input,.map-form input){background:var(--c313-color-elevated);border-color:var(--c313-color-control-border);color:var(--c313-color-text);border-radius:var(--c313-radius-control)}
+.c313 :where(.eyebrow,.edition){font-size:var(--c313-type-eyebrow);letter-spacing:var(--c313-tracking-eyebrow)}
+.c313 :where(label,.scene strong){font-size:var(--c313-type-label)}
+.c313 :where(.detail-body p,.scene small,.command-status,.range-labels,.music-row small,dl,.notice){font-size:var(--c313-type-support)}
+.c313 .scene{background:var(--c313-color-elevated);border-color:var(--c313-color-control-border);border-radius:var(--c313-radius-control)}
+.c313 .scene[aria-pressed=true]{background:var(--c313-color-elevated);border-color:var(--c313-color-accent)}
+.c313 .chip.online{color:var(--c313-color-success);border-color:var(--c313-color-success)}
+.c313 :where(.power,button[role=switch]){min-width:var(--c313-size-target);min-height:var(--c313-size-target)}
+.c313 .notice{background:var(--c313-color-elevated);border-color:var(--c313-color-accent);padding:var(--c313-space-16)}
+.c313 dialog{background:var(--c313-color-elevated);color:var(--c313-color-text);border-color:var(--c313-color-border);border-radius:var(--c313-radius-dialog)}
+.c313 #mapGrid button{min-width:var(--c313-size-target);min-height:var(--c313-size-target);font-size:var(--c313-type-support)}
+.c313 #mapGrid button.assigned{background:var(--c313-color-accent);color:var(--c313-color-on-accent)}
+@media(max-width:650px){.c313 .shell{padding-inline:var(--c313-space-12)}}
+.c313 header{height:auto;min-height:calc(var(--c313-size-target) + var(--c313-space-32));flex-wrap:wrap;gap:var(--c313-space-16);padding-block:var(--c313-space-16)}
+.c313 .header-right{max-width:100%;flex-wrap:wrap;gap:var(--c313-space-16)}
+.c313 input[type=range]{height:var(--c313-size-target)}
+.c313 button[role=switch]{width:calc(var(--c313-size-target) + var(--c313-space-16));height:var(--c313-size-target);display:flex;align-items:center;padding:var(--c313-space-8)}
+.c313 button[role=switch] span{width:var(--c313-space-24);height:var(--c313-space-24)}
+.c313 button[aria-checked=true] span{transform:translateX(var(--c313-space-24))}
