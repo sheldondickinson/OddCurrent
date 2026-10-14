@@ -1,6 +1,8 @@
 import copy
 import json
 import stat
+import subprocess
+import sys
 from pathlib import Path
 import pytest
 from scripts.profiles import validate_profile, export_map
@@ -27,6 +29,14 @@ def test_fixture_map_preserves_physical_offset_and_status_exclusion():
     assert ledmap['map'][0]==2 and ledmap['map'][-1]==196
     assert not {0,1}.intersection(ledmap['map'])
     assert len(regions['regions']['torso'])==195
+
+def test_exported_map_matches_pinned_wled_streaming_loader(tmp_path):
+    measurement=tmp_path/'fixture.json';measurement.write_text(json.dumps(measured()))
+    out=tmp_path/'out'
+    subprocess.run([sys.executable,'scripts/profiles.py','profiles/david-v1.json','--calibration',str(measurement),'--out',str(out)],check=True)
+    raw=(out/'ledmap.json').read_text()
+    assert '"map":[' in raw and '"map": [' not in raw
+    assert json.loads(raw)['map'][0]==2
 
 @pytest.mark.parametrize('fault',['missing','duplicate-index','duplicate-cell','status','bounds','zone'])
 def test_bad_maps(fault):

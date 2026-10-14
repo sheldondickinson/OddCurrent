@@ -73,14 +73,19 @@ class Store:
         self.execute('INSERT INTO events(device,at,kind) VALUES(?,?,?)', (device, time.time(), kind))
         self.execute('DELETE FROM events WHERE id NOT IN (SELECT id FROM events ORDER BY id DESC LIMIT 1000)')
 
-    def command(self, device, payload):
+    def command(self, device, payload, capability='lighting'):
+        if capability not in ('lighting', 'maintenance'):
+            raise ValueError('unsupported command capability')
         with self.lock:
             self.db.execute('BEGIN IMMEDIATE')
             try:
-                seq = self.db.execute('UPDATE devices SET seq=seq+1,desired=? WHERE id=? RETURNING seq',
-                                      (json.dumps(payload), device)).fetchone()[0]
+                if capability == 'lighting':
+                    seq = self.db.execute('UPDATE devices SET seq=seq+1,desired=? WHERE id=? RETURNING seq',
+                                          (json.dumps(payload), device)).fetchone()[0]
+                else:
+                    seq = self.db.execute('UPDATE devices SET seq=seq+1 WHERE id=? RETURNING seq', (device,)).fetchone()[0]
                 cmd = {'type': 'command', 'id': secrets.token_hex(16), 'seq': seq,
-                       'expires': int(time.time()) + 10, 'capability': 'lighting', 'payload': payload}
+                       'expires': int(time.time()) + 10, 'capability': capability, 'payload': payload}
                 self.db.execute('INSERT INTO commands VALUES(?,?,?,?,?,?)',
                                 (cmd['id'], device, seq, cmd['expires'], 'pending', json.dumps(payload)))
                 self.db.execute('DELETE FROM commands WHERE expires < ?', (time.time() - 86400,))

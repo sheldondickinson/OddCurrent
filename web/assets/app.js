@@ -27,6 +27,9 @@ function render() {
   $('serial').textContent=lamp?.id || 'Your illuminated companion';
   $('access').hidden=!!session && !!lamp;
   $('logout').hidden=!session;
+  $('adminLink').hidden=session?.role!=='admin';
+  $('mapLocate').hidden=session?.role!=='admin';
+  $('mapLocate').disabled=pending||!online||r.management_protocol!==1||!r.lighting_ready;
   $('advanced').hidden=!['owner','admin'].includes(session?.role) || !lamp;
   $('power').disabled=$('brightness').disabled=$('music').disabled=!canControl;
   $('power').setAttribute('aria-pressed',String(!!r.on));
@@ -57,7 +60,8 @@ async function refresh() {
   if(!session)return;
   fleet=await api('/api/devices');
   const match=location.pathname.match(/^\/d\/([a-z0-9-]+)$/);
-  lamp=match ? fleet.find(d=>d.id===match[1]) : fleet[0];
+  const requested=match?.[1]||new URLSearchParams(location.search).get('device');
+  lamp=requested ? fleet.find(d=>d.id===requested) : fleet[0];
   if(match && !lamp)notice('This lamp is not in your account. Use the private ownership code to claim it, or accept its owner’s invitation.');
   render();
   $('deviceList').replaceChildren();
@@ -154,6 +158,14 @@ function drawMap() {
   }
   $('mapProgress').textContent=`${pixels.length} of ${$('mapCount').value} decorative pixels measured. Status is excluded.`;
 }
+$('mapLocate').onclick=async()=>{
+  const index=Number($('mapIndex').value);
+  if(!lamp||!Number.isInteger(index)||index<0||index>=Number($('mapCount').value))return notice('Select a valid body pixel index.');
+  try {
+    await api(`/api/admin/devices/${encodeURIComponent(lamp.id)}/actions`,{method:'POST',body:JSON.stringify({action:'locate_pixel',index})});
+    notice(`Locate requested for body pixel ${index}. It will light for three seconds when received. Ignore the two status pixels when measuring.`);
+  }catch(error){notice(error.message);}
+};
 $('mapReset').onclick=()=>{
   const w=Number($('mapWidth').value),h=Number($('mapHeight').value);
   if(!Number.isInteger(w)||!Number.isInteger(h)||w<1||h<1||w>128||h>128)return notice('Dimensions must be whole numbers between 1 and 128.');
@@ -181,7 +193,7 @@ async function start() {
     if(token){try{await api('/api/invites/redeem',{method:'POST',body:JSON.stringify({code:token})});location.href='/';return;}catch(error){notice(error.message);}}
   }
   try { const health=await api('/healthz');$('demo').hidden=health.mode!=='demo'; }catch{}
-  try { session=await api('/api/session');await refresh(); }
+  try { session=await api('/api/session');if(session.role==='admin'&&location.pathname==='/'){location.replace('/admin');return;}await refresh(); }
   catch(error) { if(session)notice(error.message);render(); }
   if(location.pathname.startsWith('/pair/')) {
     notice('Setup uses the unique Wi-Fi QR on the base. Join that network, then open http://4.3.2.1. This page does not collect home Wi-Fi passwords.');

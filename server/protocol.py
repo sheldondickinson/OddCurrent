@@ -1,6 +1,7 @@
 """Strict, capability-limited cloud contract. No arbitrary WLED JSON passthrough."""
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, model_validator, field_validator
+from ipaddress import IPv4Address
 
 SCENES = ('gallery', 'sunset', 'blue', 'spectrum', 'pulse', 'music')
 
@@ -29,6 +30,17 @@ class Claim(BaseModel):
     model_config = ConfigDict(extra='forbid')
     code: str = Field(min_length=16, max_length=128)
 
+class Maintenance(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    action: Literal['refresh', 'identify', 'reboot', 'locate_pixel']
+    index: StrictInt | None = Field(default=None, ge=0, le=999)
+
+    @model_validator(mode='after')
+    def index_for_locator_only(self):
+        if (self.action == 'locate_pixel') != (self.index is not None):
+            raise ValueError('Only locate_pixel requires an index')
+        return self
+
 class Invite(BaseModel):
     model_config = ConfigDict(extra='forbid')
     hours: StrictInt = Field(default=24, ge=1, le=168)
@@ -51,6 +63,23 @@ class Telemetry(BaseModel):
     xy_ready: StrictBool = False
     lighting_ready: StrictBool = False
     hardware_ready: StrictBool = False
+    local_ip: StrictStr | None = Field(default=None, max_length=15)
+    free_heap: StrictInt | None = Field(default=None, ge=0, le=16777216)
+    free_psram: StrictInt | None = Field(default=None, ge=0, le=67108864)
+    error_code: StrictInt = Field(default=0, ge=0, le=255)
+    pixel_count: StrictInt | None = Field(default=None, ge=0, le=15000)
+    body_count: StrictInt | None = Field(default=None, ge=0, le=15000)
+    status_count: StrictInt | None = Field(default=None, ge=0, le=2)
+    status_display: Literal['disabled', 'body', 'standby', 'fault'] | None = None
+    management_protocol: StrictInt = Field(default=0, ge=0, le=1)
+    audio_active: StrictBool = False
+    audio_level: StrictInt = Field(default=0, ge=0, le=255)
+    audio_peak: StrictInt = Field(default=0, ge=0, le=255)
+
+    @field_validator('local_ip')
+    @classmethod
+    def valid_ipv4(cls, value):
+        return str(IPv4Address(value)) if value is not None else None
 
 class Ack(BaseModel):
     model_config = ConfigDict(extra='forbid')

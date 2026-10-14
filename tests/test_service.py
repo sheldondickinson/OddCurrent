@@ -180,3 +180,80 @@ def test_webp_art_served_without_os_mime_database(tmp_path, monkeypatch):
     assert response.status_code==200
     assert response.headers['content-type']=='image/webp'
     assert response.content[:4]==b'RIFF' and response.content[8:12]==b'WEBP'
+
+
+def operator_session(app,db,client):
+    app.state.config.admin_subjects=['issuer|operator']
+    token,csrf=db.session(subject='issuer|operator',role='admin')
+    client.cookies.set('oc_session',token)
+    return csrf
+
+
+def test_admin_fleet_denies_owner_impostor_and_anonymous(setup):
+    app,db,client,*_=setup
+    assert client.get('/api/admin/devices').status_code==403
+    assert client.get('/admin').status_code==403
+    token,_=db.session(subject='issuer|impostor',role='admin')
+    client.cookies.set('oc_session',token)
+    assert client.get('/api/admin/devices').status_code==403
+    client.cookies.clear()
+    assert client.get('/api/admin/devices').status_code==401
+    assert client.get('/admin',follow_redirects=False).status_code==303
+
+
+def test_admin_fleet_ip_privacy_and_no_credentials(setup):
+    app,db,client,*_=setup
+    with client.websocket_connect('wss://lamp.example.invalid/ws/devices/david-001',headers={'Authorization':'Bearer '+'a'*48}) as ws:
+        ws.receive_json();ws.send_json(telemetry(local_ip='10.10.10.42',free_heap=120000,management_protocol=1));ws.receive_json()
+        assert 'local_ip' not in client.get('/api/devices/david-001').json()['reported']
+        operator_session(app,db,client)
+        rows=client.get('/api/admin/devices').json()
+        assert len(rows)==2 and rows[0]['reported']['local_ip']=='10.10.10.42'
+        assert rows[0]['claimed'] is True and rows[1]['claimed'] is False
+        output=json.dumps(rows)
+        for secret in ('credential_hash','claim_hash','issuer|owner','csrf','a'*48,'c'*24):assert secret not in output
+        assert client.get('/admin').status_code==200
+
+
+def test_maintenance_roundtrip_and_no_lighting_desired_corruption(setup):
+    app,db,client,*_=setup
+    csrf=operator_session(app,db,client)
+    with client.websocket_connect('wss://lamp.example.invalid/ws/devices/david-001',headers={'Authorization':'Bearer '+'a'*48}) as ws:
+        hello=ws.receive_json();ws.send_json(telemetry(management_protocol=1,body_count=195));ws.receive_json()
+        assert client.post('/api/admin/devices/david-001/actions',json={'action':'identify'}).status_code==403
+        response=client.post('/api/admin/devices/david-001/actions',json={'action':'locate_pixel','index':194},headers=headers(csrf))
+        assert response.status_code==200
+        cmd=ws.receive_json();assert cmd['capability']=='maintenance' and cmd['session']==hello['session']
+        assert cmd['payload']=={'action':'locate_pixel','index':194} and cmd['expires']-time.time()<=10
+        assert db.one('SELECT desired FROM devices WHERE id=?',('david-001',))['desired']=='{}'
+        ws.send_json({'type':'ack','id':cmd['id'],'seq':cmd['seq'],'status':'applied'})
+        ws.send_json(telemetry(management_protocol=1,body_count=195));ws.receive_json()
+        assert client.get('/api/admin/devices').json()[0]['recent_commands'][0]['status']=='applied'
+        assert client.post('/api/admin/devices/david-001/actions',json={'action':'locate_pixel','index':195},headers=headers(csrf)).status_code==422
+    assert client.post('/api/admin/devices/david-001/actions',json={'action':'reboot'},headers=headers(csrf)).status_code==409
+
+
+@pytest.mark.parametrize('payload',[{'action':'erase'},{'action':'reboot','index':1},{'action':'locate_pixel'}, {'action':'locate_pixel','index':True}, {'action':'identify','gpio':4}])
+def test_maintenance_strict_actions(setup,payload):
+    app,db,client,*_=setup
+    csrf=operator_session(app,db,client)
+    assert client.post('/api/admin/devices/david-001/actions',json=payload,headers=headers(csrf)).status_code==422
+
+
+def test_maintenance_requires_supported_device_and_separate_lighting_gate(setup):
+    app,db,client,*_=setup
+    csrf=operator_session(app,db,client)
+    with client.websocket_connect('wss://lamp.example.invalid/ws/devices/david-001',headers={'Authorization':'Bearer '+'a'*48}) as ws:
+        ws.receive_json();ws.send_json(telemetry());ws.receive_json()
+        assert client.post('/api/admin/devices/david-001/actions',json={'action':'reboot'},headers=headers(csrf)).status_code==409
+        ws.send_json(telemetry(lighting_ready=False,management_protocol=1));ws.receive_json()
+        assert client.post('/api/admin/devices/david-001/actions',json={'action':'identify'},headers=headers(csrf)).status_code==409
+        assert client.post('/api/admin/devices/david-001/actions',json={'action':'refresh'},headers=headers(csrf)).status_code==200
+        assert ws.receive_json()['payload']=={'action':'refresh'}
+
+
+def test_admin_ip_validation_rejects_script_input(setup):
+    from pydantic import ValidationError
+    from server.protocol import Telemetry
+    with pytest.raises(ValidationError):Telemetry.model_validate(telemetry(local_ip='javascript:x'))
+    with pytest.raises(ValidationError):Telemetry.model_validate(telemetry(audio_level=999))

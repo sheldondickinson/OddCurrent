@@ -26,7 +26,7 @@ No delivery queue is drained on reconnect. Local effects/buttons continue offlin
 sensitivity 1–100, status brightness 1–20 and a calibrated anatomical zone.
 Zone changes permit on/brightness/scene only. Guests permit on/brightness/scene/
 music only. No passthrough WLED JSON, arbitrary URLs, GPIO writes, motors or
-remote reset/provisioning exist in this contract. Status pixels are outside zones.
+remote factory/Wi-Fi reset or provisioning exist in this contract. Status pixels are outside zones.
 
 Telemetry permits light state, RSSI, firmware ID, boot reason, reconnect count,
 uptime and calibration readiness. Unknown fields (including microphone samples,
@@ -35,3 +35,16 @@ Firmware reconnects with exponential backoff and jitter, bounded at 60 seconds.
 Rotate/revoke device credentials through a future reviewed administrative path;
 this development version supports hash registration and manual controlled cutover,
 not zero-downtime automated device credential rotation.
+
+Administrator-only `maintenance` commands permit `refresh`, `identify`, `reboot`
+and `locate_pixel` with a bounded body-local index. The same session, expiry,
+sequence, update lockout and acknowledgement rules apply. Identify and locate
+are temporary output overlays; they restore normal rendering automatically.
+Restart is delayed long enough to send its acknowledgement. Neither action
+changes Wi-Fi, factory identity, current caps or hardware acceptance.
+
+Firmware0.3 adds typed optional diagnostics: localIPv4, free heap/PSRAM, error,
+pixel counts, status display, management protocol and real AudioReactive numeric
+level/window peak. No waveform/FFT/audio sample buffers are transmitted. LocalIP
+is returned only to an explicitly authorised admin. Deploy the compatible backend
+before this firmware because the telemetry schema rejects unknown fields.

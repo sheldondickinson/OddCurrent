@@ -18,7 +18,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .config import Config
-from .protocol import Ack, Claim, Invite, Lighting, Telemetry
+from .protocol import Ack, Claim, Invite, Lighting, Maintenance, Telemetry
 from .store import Store, digest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -82,6 +82,12 @@ def create_app(config: Config):
             raise HTTPException(403, 'This lamp has not been shared with you')
         return row
 
+    def administrator(request):
+        who = session(request)
+        if who['role'] != 'admin' or who['subject'] not in config.admin_subjects:
+            raise HTTPException(403, 'Administrator access required')
+        return who
+
     def cookie(response, token):
         response.set_cookie('oc_session', token, secure=not config.demo, httponly=True,
                             samesite='lax', max_age=43200, path='/')
@@ -94,6 +100,8 @@ def create_app(config: Config):
             store.execute('UPDATE devices SET last_seen=? WHERE id=?', (last_seen, row['id']))
         online = row['id'] in connections and last_seen is not None and time.time() - last_seen < 45
         reported = json.loads(row['reported'])
+        if role != 'admin':
+            reported.pop('local_ip', None)
         return {'id': row['id'], 'name': 'David' if row['profile'] == 'david-v1' else row['profile'],
                 'profile': row['profile'], 'role': role, 'online': online,
                 'last_seen': last_seen, 'reported': reported, 'desired': json.loads(row['desired']),
@@ -152,7 +160,7 @@ def create_app(config: Config):
         old = request.cookies.get('oc_session', '')
         store.execute('DELETE FROM sessions WHERE hash=?', (digest(old),))
         token, _ = store.session(subject=identity,role='admin' if identity in config.admin_subjects else 'owner')
-        return cookie(RedirectResponse('/', status_code=303), token)
+        return cookie(RedirectResponse('/admin' if identity in config.admin_subjects else '/', status_code=303), token)
 
     @app.get('/api/session')
     def current(request: Request):
@@ -181,6 +189,52 @@ def create_app(config: Config):
     def detail(device: str, request: Request):
         who = session(request)
         return device_view(authorised(device, who), who['role'])
+
+    @app.get('/admin')
+    def admin_page(request: Request):
+        if not request.cookies.get('oc_session'):
+            return RedirectResponse('/auth/login', status_code=303)
+        administrator(request)
+        return FileResponse(ROOT / 'web/admin.html')
+
+    @app.get('/api/admin/devices')
+    def admin_devices(request: Request):
+        administrator(request)
+        result=[]
+        for row in store.all('SELECT * FROM devices ORDER BY id'):
+            view=device_view(row, 'admin')
+            view['claimed']=row['owner'] is not None
+            view['guest_count']=store.one("SELECT COUNT(*) AS n FROM sessions WHERE device=? AND role='guest' AND expires>?", (row['id'],time.time()))['n']
+            view['recent_commands']=store.all('SELECT id,seq,status,expires,payload FROM commands WHERE device=? ORDER BY seq DESC LIMIT 10', (row['id'],))
+            for command in view['recent_commands']:
+                command['payload']=json.loads(command['payload'])
+                if command['status']=='pending' and command['expires']<time.time(): command['status']='expired'
+            view['events']=store.all('SELECT at,kind FROM events WHERE device=? ORDER BY id DESC LIMIT 20',(row['id'],))
+            result.append(view)
+        return result
+
+    @app.post('/api/admin/devices/{device}/actions')
+    async def admin_action(device: str, data: Maintenance, request: Request):
+        who=administrator(request);csrf(request,who);row=authorised(device,who)
+        limit(('maintenance',who['hash']),30)
+        reported=json.loads(row['reported']);live=connections.get(device)
+        if not live or not row['last_seen'] or time.time()-row['last_seen']>=45:
+            raise HTTPException(409,'Lamp offline; nothing queued')
+        if reported.get('management_protocol')!=1:
+            raise HTTPException(409,'This firmware does not support remote maintenance')
+        if data.action in ('identify','locate_pixel') and not reported.get('lighting_ready'):
+            raise HTTPException(409,'Lighting setup is not enabled')
+        if data.action=='locate_pixel' and data.index>=reported.get('body_count',0):
+            raise HTTPException(422,'Body pixel index is outside the reported output')
+        cmd=store.command(device,data.model_dump(exclude_none=True),capability='maintenance')
+        cmd['session']=live[1]
+        try:
+            await asyncio.wait_for(live[0].send_json(cmd),timeout=2)
+        except Exception:
+            store.execute('UPDATE commands SET status=? WHERE id=?',('disconnected',cmd['id']))
+            raise HTTPException(409,'Connection lost; nothing queued')
+        store.event(device,'admin_'+data.action)
+        return {'id':cmd['id'],'status':'pending','expires':cmd['expires']}
 
     @app.post('/api/devices/{device}/claim')
     def claim(device: str, data: Claim, request: Request):

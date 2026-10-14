@@ -36,5 +36,6 @@ config={'hw':{'led':{'total':start,'maxpwr':a.current_limit_ma,'ledma':60,'ins':
               'AudioReactive':{'enabled':True,'digitalmic':{'type':1,'pin':[12,11,10,-1]}}}}
 a.out.mkdir(parents=True,exist_ok=False)
 for name,data in [('cfg.fragment.json',config),('ledmap.json',ledmap),('regions.json',regions)]:
-    (a.out/name).write_text(json.dumps(data,indent=2)+'\n')
+    text=json.dumps(data,separators=(',',':')) if name=='ledmap.json' else json.dumps(data,indent=2)
+    (a.out/name).write_text(text+'\n')
 print('Validated development configuration generated. Review/import fragment locally; do not replace sec.json or factory identity.')

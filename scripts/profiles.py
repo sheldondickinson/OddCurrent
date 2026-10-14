@@ -68,7 +68,8 @@ def main():
         if not a.out: p.error('--out required')
         ledmap, regions = export_map(json.loads(a.calibration.read_text()), profile)
         a.out.mkdir(parents=True, exist_ok=True)
-        (a.out / 'ledmap.json').write_text(json.dumps(ledmap) + '\n')
+        # Pinned WLED's streaming loader searches for the exact token '"map":['.
+        (a.out / 'ledmap.json').write_text(json.dumps(ledmap,separators=(',',':')) + '\n')
         (a.out / 'regions.json').write_text(json.dumps(regions) + '\n')
     print('Profile valid' + (' for physical wiring' if a.wiring else '; wiring approval remains separate'))
 

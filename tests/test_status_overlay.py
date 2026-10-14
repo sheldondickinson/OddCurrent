@@ -44,6 +44,7 @@ struct Adapter {
  struct Region {bool active=false,on=true;int scene=0,brightness=100;std::vector<uint16_t> pixels;};
  std::vector<Region> regions;
  uint8_t statusCount=2,statusBrightness=5;
+ uint32_t identifyUntil=0,locateUntil=0;uint16_t locateIndex=0;
  oddcurrent::StatusDisplay statusDisplayMode=oddcurrent::StatusDisplay::standby;
  uint32_t statusFrame[2]={0,0};
  bool lightingReady(){return true;}
@@ -70,6 +71,10 @@ int main() {
  assert(statusBus.pixels[0]==0x500000 && statusBus.brightness>0);
  errorFlag=0;a.beforeBusShow();
  assert(a.statusDisplayMode==oddcurrent::StatusDisplay::standby);
+ a.locateIndex=1;a.locateUntil=fakeNow+3000;a.beforeBusShow();
+ assert(bodyBus.pixels[0]==0 && bodyBus.pixels[1]==0x005050 && bodyBus.pixels[2]==0);
+ assert(bodyBus.brightness>=24);
+ fakeNow+=3001;a.beforeBusShow();assert(bodyBus.brightness==0);
 }
 '''.replace('POLICY', policy).replace('METHOD', method)
     cpp = tmp_path / 'status.cpp'
