@@ -40,7 +40,10 @@ reopen the setup page after a reboot to obtain a fresh token.
 ## Recipient flow
 
 1. Power on. Scan the base Wi-Fi QR and join the unique setup network.
-2. Open the captive portal or `http://4.3.2.1`. Select home SSID and enter password.
+2. Open the captive portal or `http://4.3.2.1`. Choose a discovered 2.4 GHz network
+   from the dropdown and enter its password. Use **Scan again** to refresh the
+   list. The normal setup flow has no free-text SSID field; hidden networks use
+   the retained advanced native WLED network settings.
 3. Observe green confirmation and check the native local page if the internet is
    unavailable. Each lamp has its own `<serial>.local`; mDNS can fail on isolated
    Wi-Fi/subnets, so document finding its DHCP address.
