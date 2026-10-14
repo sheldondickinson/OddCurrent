@@ -74,7 +74,9 @@ class OddCurrent : public Usermod {
       seg.colors[0] = scene==1 ? RGBW32(255,85,35,0) : scene==2 ? RGBW32(20,100,255,0) : RGBW32(255,215,170,0);
       seg.speed=100; seg.intensity=128;
     }
-    music=scene==5; audio(); colorUpdated(CALL_MODE_BUTTON); dirty=true;
+    // Segment values are already applied. colorUpdated() would overwrite them with
+    // stale legacy globals; stateUpdated() synchronises those globals from the segment.
+    music=scene==5; audio(); ::stateChanged=true; stateUpdated(CALL_MODE_BUTTON); dirty=true;
   }
 
   bool command(JsonObject cmd) {
@@ -126,7 +128,7 @@ class OddCurrent : public Usermod {
     if (p["music"].is<bool>()) { music=p["music"]; audio(); if(music) applyScene(5); else if(scene==5) applyScene(0); }
     if (p.containsKey("sensitivity")) { int s=p["sensitivity"]; if(s<1||s>100)return false; sensitivity=s; audio(); }
     if (p.containsKey("status_brightness")) { int s=p["status_brightness"]; if(s<1||s>20)return false; statusBrightness=s; }
-    lastSeq=seq; colorUpdated(CALL_MODE_DIRECT_CHANGE); dirty=true; return true;
+    lastSeq=seq; stateUpdated(CALL_MODE_DIRECT_CHANGE); dirty=true; return true;
   }
 
   void queueSend(const String& text) {
@@ -199,7 +201,7 @@ class OddCurrent : public Usermod {
     d["brightness"]=constrain(map(bri?bri:briLast,3,255,1,100),1,100);
     d["scene"]=scenes[scene]; d["music"]=music; d["sensitivity"]=sensitivity;
     d["status_brightness"]=statusBrightness; d["rssi"]=WiFi.RSSI();
-    d["firmware"]="16.0.1-oddcurrent-0.2.0";
+    d["firmware"]="16.0.1-oddcurrent-0.2.1";
     d["lighting_ready"]=lightingReady(); d["hardware_ready"]=bool(ready);
     d["boot_reason"]=String(int(esp_reset_reason())); d["reconnects"]=reconnects;
     d["uptime_s"]=millis()/1000;
@@ -237,7 +239,7 @@ class OddCurrent : public Usermod {
       if(a==Action::long_press) { sensitivity=sensitivity>=100?25:sensitivity+25; audio(); }
       if(a==Action::double_press) { applyScene(5); strip.getMainSegment().palette++; }
     }
-    colorUpdated(CALL_MODE_BUTTON); dirty=true;
+    stateUpdated(CALL_MODE_BUTTON); dirty=true;
   }
 
 public:
@@ -325,7 +327,7 @@ public:
       sensitivity=state.getUChar("sensitivity",50);
       statusBrightness=state.getUChar("status_bri",5);
       music=state.getBool("music",false);audio();
-      colorUpdated(CALL_MODE_INIT);
+      stateUpdated(CALL_MODE_INIT);
     }
   }
 
@@ -401,6 +403,7 @@ public:
   void onStateChange(uint8_t) override { dirty=true;stateDirty=true;stateChanged=millis(); }
   void addToJsonInfo(JsonObject& obj) override {
     obj["oddcurrent"]["serial"]=serial;
+    obj["oddcurrent"]["firmware"]="16.0.1-oddcurrent-0.2.1";
     obj["oddcurrent"]["hardware_ready"]=ready;
     obj["oddcurrent"]["lighting_ready"]=lightingReady();
     obj["oddcurrent"]["prototype_controls"]=prototypeControls;
